@@ -1,0 +1,6 @@
+{
+    "sign": {
+        "prefix": ["sign"],
+        "body": "$LINE_COMMENT @fileName: $TM_FILENAME\n$LINE_COMMENT @creation_date: ${CURRENT_DATE}/${CURRENT_MONTH}/${CURRENT_YEAR}\n$LINE_COMMENT @authors: "
+    }
+}
