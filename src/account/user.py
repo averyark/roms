@@ -4,8 +4,16 @@
 
 import datetime
 
+def validateDate(date_text):
+        try:
+            datetime.date.fromisoformat(date_text)
+        except ValueError:
+            raise ValueError("Incorrect data format, should be YYYY-MM-DD")
+
 class User:
     def __init__(self, firstName, lastName, email, birthday):
+        isinstance(firstName, str)
+        validateDate(birthday)
 
         self.firstName = firstName
         self.lastName = lastName
@@ -17,6 +25,3 @@ class User:
 
     def getName(self):
         return f"{self.lastName} {self.firstName}"
-    
-
-User("Alwin", "Ting", "alwinting@gmail.com")
