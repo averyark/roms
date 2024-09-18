@@ -16,7 +16,7 @@
      strategy:
        fail-fast: false
        matrix:
-         python-version: ["3.9.4"]
+         python-version: ["3.9", "3.11"]
 
      steps:
      - uses: actions/checkout@v4
