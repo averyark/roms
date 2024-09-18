@@ -30,5 +30,8 @@ class User:
 
 # print(validateDate("2005-09-21"))
 
+def test_dummy():
+    pass
+
 def __init__():
      print("loaded")
