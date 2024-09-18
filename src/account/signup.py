@@ -3,11 +3,24 @@
 # @authors: averyark
 
 from user import User
+import user
+from icecream import ic
 
-def signup(*arg) -> User:
+def signup(data) -> User:
     try:
-        User(*arg)
-    except ValueError as err:
-        print(err.args[0])
+        user.validateUserData(data)
+    except Exception as err:
+        print("Error occurred during signup:")
+        print("-"*15, " Exception ", "-"*15)
+        print(err)
+        print("-"*40)
+    else:
+        # add to database
+        ic(data)
 
-signup("Alwin", "Ting", "alwin@gmail.com", "21092005")
+# signup({
+#     "firstName": "alwin",
+#     "lastName": "ting",
+#     "birthday": "2005-09-21",
+#     "email": "alwin@gmail.com"
+# })
