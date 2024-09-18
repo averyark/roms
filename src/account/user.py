@@ -3,12 +3,13 @@
 # @authors: averyark
 
 import pendulum
+import datetime
 
 def validateDate(date_text):
         try:
             datetime.date.fromisoformat(date_text)
         except ValueError:
-            raise ValueError("Incorrect data format, should be YYYY-MM-DD")
+             raise ValueError("Incorrect data format, should be YYYY-MM-DD")
 
 class User:
     def __init__(self, firstName, lastName, email, birthday):
@@ -26,6 +27,8 @@ class User:
     def getName(self):
         return f"{self.lastName} {self.firstName}"
 
+
+# print(validateDate("2005-09-21"))
 
 def __init__():
      print("loaded")
