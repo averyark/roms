@@ -2,7 +2,7 @@
 # @creation_date: 14/09/2024
 # @authors: averyark
 
-import datetime
+import pendulum
 
 def validateDate(date_text):
         try:
@@ -25,3 +25,7 @@ class User:
 
     def getName(self):
         return f"{self.lastName} {self.firstName}"
+
+
+def __init__():
+     print("loaded")
