@@ -1,6 +1,6 @@
 ## Restaurant Ordering Management Systems
 
-Manager
+### Manager
 1. System Administration: Manage user accounts and credentials.
 2. Order Management: Oversee order details, including viewing and updating order status.
 3. Financial Management: Track income, expenses, and profitability.

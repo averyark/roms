@@ -30,6 +30,20 @@ def validateEmail(email: str):
     elif not matched or matched.end() != len(email):
         raise ValueError("invalid email format")
 
+def validatePassword(password: str):
+    matched = re.search(r"^[a-zA-Z0-9!\"#\$%\&'\(\)\*\+,\-:;<=>\?@\[\]\^_`\{\|\}~\.]*", password)
+
+    if not isinstance(password, str):
+        raise TypeError("password must be a string")
+    elif len(password) < 8 or len(password) > 50:
+        raise ValueError("password must have 8-50 characters")
+    elif len(re.findall(r"[0-9]", password)) < 1:
+        raise ValueError("password must have at least 1 number")
+    elif len(re.findall(r"[a-zA-Z]", password)) < 1:
+        raise ValueError("password must have at least 1 alphabet")
+    elif not matched or matched.end() != len(password):
+        raise ValueError("password must be alphabet, number or #~`!.@#$%^&*()_-+={[}]|:;\"'<,>?")
+
 class User:
     def __init__(self, data):
         self.firstName = data.firstName
@@ -52,6 +66,7 @@ def validateUserData(data: dict):
     if not dict(data):
         raise TypeError("data must be a dictionary")
 
+    validatePassword(data.get("password"))
     validateName(data.get("firstName"))
     validateName(data.get("lastName"))
     validateDate(data.get("birthday"))

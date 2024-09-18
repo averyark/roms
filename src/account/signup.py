@@ -5,6 +5,12 @@
 from user import User
 import user
 from icecream import ic
+import credentials
+
+# TODO: USE SQLITE3
+import shelve
+
+userdataPath = "mock-database/userdata"
 
 def signup(data) -> User:
     try:
@@ -17,6 +23,19 @@ def signup(data) -> User:
     else:
         # add to database
         ic(data)
+        with shelve.open(userdataPath) as userdata:
+            if userdata[data.email]:
+                print(f"{data.email} already exist in the userdata database")
+                pass
+
+            credentials.setCredentials(data.email, data.password)
+
+            userdata[data.email] = {
+                "firstName": data.firstName,
+                "lastName": data.lastName,
+                "birthday": data.birthday,
+                "email": data.email
+            }
 
 # signup({
 #     "firstName": "alwin",
