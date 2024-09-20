@@ -13,13 +13,12 @@ Functions:
         data into the database. Sets user credentials if signup is successful.
 """
 
-from user import User
-import user
 from icecream import ic
-import credentials
+
+from .user import User, validate_user_data
+from .credentials import set_credentials
 
 import sqlite3
-
 credentialsPath = 'mock-database.db'
 db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
@@ -40,7 +39,7 @@ db.commit()
 
 def signup(data: dict, permission: int) -> User:
     try:
-        user.validateUserData(data)
+        validate_user_data(data)
     except Exception as err:
         print('Error occurred during signup:')
         print('-'*15, ' Exception ', '-'*15)
@@ -85,7 +84,7 @@ def signup(data: dict, permission: int) -> User:
 
             if row:
                 db.commit()
-                credentials.setCredentials(row[0], data.get('password'))
+                set_credentials(row[0], data.get('password'))
             else:
                 db.rollback()
 

@@ -2,11 +2,11 @@
 # @creation_date: 18/09/2024
 # @authors: averyark
 
-from . import user
+from ..roms.account import user
 
 # birthday constraint test
 def test_validateBirthday():
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first@gmail.com',
         'password': 'somepassword@12345678',
@@ -16,7 +16,7 @@ def test_validateBirthday():
 
     # This is not valid in py 3.9
     # reference to test: https://github.com/averyark/roms/actions/runs/10922064922/job/30315543710
-    # user.validateUserData({
+    # user.validate_user_data({
     #     'birthday': '20050921',
     #     'email': 'first@gmail.com',
     #     'firstName': 'first',
@@ -24,7 +24,7 @@ def test_validateBirthday():
     # })
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '09-21-2005',
             'email': 'first@gmail.com',
             'password': 'somepassword@12345678',
@@ -37,7 +37,7 @@ def test_validateBirthday():
         raise ValueError("Validation passed for invalid birthday")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '09-2005-21',
             'email': 'first@gmail.com',
             'password': 'somepassword@12345678',
@@ -52,14 +52,14 @@ def test_validateBirthday():
 # email constraint test
 def test_validateEmail():
 
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first@gmail.com',
         'password': 'somepassword@12345678',
         'firstName': 'first',
         'lastName': 'last'
     })
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first.last@gmail.com',
         'password': 'somepassword@12345678',
@@ -68,7 +68,7 @@ def test_validateEmail():
     })
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': f'{"a"*50}@gmail.com',
             'password': 'somepassword@12345678',
@@ -81,7 +81,7 @@ def test_validateEmail():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 1,
             'password': 'somepassword@12345678',
@@ -94,7 +94,7 @@ def test_validateEmail():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first_last@gmail.com',
             'password': 'somepassword@12345678',
@@ -107,7 +107,7 @@ def test_validateEmail():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': '@gmail.com',
             'password': 'somepassword@12345678',
@@ -120,7 +120,7 @@ def test_validateEmail():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first@gmail',
             'password': 'somepassword@12345678',
@@ -133,7 +133,7 @@ def test_validateEmail():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.com',
             'password': 'somepassword@12345678',
@@ -147,14 +147,14 @@ def test_validateEmail():
 
 # name constraint test
 def test_validateName():
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first.last@gmail.com',
         'password': 'somepassword@12345678',
         'firstName': 'first',
         'lastName': 'last'
     })
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first.last@gmail.com',
         'password': 'somepassword@12345678',
@@ -162,7 +162,7 @@ def test_validateName():
         'lastName': 'last'
     })
 
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first.last@gmail.com',
         'password': 'somepassword@12345678',
@@ -171,7 +171,7 @@ def test_validateName():
     })
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 1,
             'password': 'somepassword@12345678',
@@ -184,7 +184,7 @@ def test_validateName():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': 'somepassword@12345678',
@@ -197,7 +197,7 @@ def test_validateName():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': 'somepassword@12345678',
@@ -210,7 +210,7 @@ def test_validateName():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': 'somepassword@12345678',
@@ -222,7 +222,7 @@ def test_validateName():
     else:
         raise ValueError("Validation passed for invalid email")
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': 'somepassword@12345678',
@@ -235,7 +235,7 @@ def test_validateName():
         raise ValueError("Validation passed for invalid email")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': 'somepassword@12345678',
@@ -249,14 +249,14 @@ def test_validateName():
 
 # password constraint test
 def test_validatePassword():
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first.last@gmail.com',
         'password': 'somepassword@12345678',
         'firstName': 'first',
         'lastName': 'last'
     })
-    user.validateUserData({
+    user.validate_user_data({
         'birthday': '2005-09-21',
         'email': 'first.last@gmail.com',
         'password': 'somepassword12345678',
@@ -265,7 +265,7 @@ def test_validatePassword():
     })
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'password': 'abc123',
             'email': 'first.last@gmail.com',
@@ -278,7 +278,7 @@ def test_validatePassword():
         raise ValueError("Validation passed for invalid password")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': 'somepass@123XÆ ',
@@ -291,7 +291,7 @@ def test_validatePassword():
         raise ValueError("Validation passed for invalid password")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': "a"*51,
@@ -304,7 +304,7 @@ def test_validatePassword():
         raise ValueError("Validation passed for invalid password")
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': "12345678",
@@ -318,7 +318,7 @@ def test_validatePassword():
 
 
     try:
-        user.validateUserData({
+        user.validate_user_data({
             'birthday': '2005-09-21',
             'email': 'first.last@gmail.com',
             'password': "abcdefgh",

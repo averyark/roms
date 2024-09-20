@@ -22,8 +22,8 @@ Functions:
 from icecream import ic
 import sqlite3
 import uuid
-
-import credentials, user
+from .credentials import validate_credentials
+from .user import begin_session
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
@@ -43,7 +43,7 @@ db.commit()
 
 def login(userId: int, credential: str) -> None:
     # validate credentials
-    if not credentials.validateCredentials(userId, credential):
+    if not validate_credentials(userId, credential):
         raise RuntimeError("Invalid credentials")
 
     sessionToken = None
@@ -61,7 +61,7 @@ def login(userId: int, credential: str) -> None:
             sessionToken = row[0]
         else:
             sessionToken = str(uuid.uuid1())
-            
+
             cursor.execute(
             f'''
                 INSERT INTO UserSessionTokens(
@@ -82,9 +82,9 @@ def login(userId: int, credential: str) -> None:
         print("User doesn't have a sessionToken")
         return
 
-    return user.beginSession(userId, sessionToken)
+    return begin_session(userId, sessionToken)
 
-def getUserIdForEmail(email: str) -> int:
+def get_userid_from_email(email: str) -> int:
     userId = None
     try:
         cursor.execute(
@@ -99,29 +99,3 @@ def getUserIdForEmail(email: str) -> int:
         pass
 
     return userId
-
-login(getUserIdForEmail("email@gmail.com"), "SomePassword@123456")
-
-# print(cursor.execute(
-#     f'''
-#         SELECT
-#             *
-#         FROM UserSessionTokens
-#     '''
-# ).fetchall())
-
-# print(cursor.execute(
-#     f'''
-#         SELECT
-#             *
-#         FROM Credentials
-#     '''
-# ).fetchall())
-
-# print(cursor.execute(
-#     f'''
-#         SELECT
-#             *
-#         FROM Userdata
-#     '''
-# ).fetchall())

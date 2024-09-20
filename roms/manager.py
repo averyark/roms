@@ -1,12 +1,13 @@
-from ..components import feedback, manageUser
-from ..account.user import User
+import typing
+
+if typing.TYPE_CHECKING:
+    from .user import User
 
 # APIS
 def request_edit_user_account(self: 'User' , requestKind: str, *arg):
     if requestKind == "EditUserCredentials":
-        email = arg[0]
-        newPassword = arg[1]
-        manageUser.editUserCredentials(email, newPassword)
+        # Do something
+        pass
     elif requestKind == "EditFirstName":
         # Do something
         pass
@@ -21,5 +22,7 @@ def request_order_details(self: 'User'):
     pass
 
 def request_view_feedbacks(self: 'User', dish: str):
+    pass
 
-    feedback.view_dishes()
+if __name__ == '__main__':
+    pass

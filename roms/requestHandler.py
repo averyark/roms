@@ -17,8 +17,7 @@ Raises:
     Exception: If there is an error loading user data from the database.
 """
 
-import user
-import login
+from user import begin_session, activeSessions
 from icecream import ic
 import sqlite3
 import fastapi
@@ -31,7 +30,7 @@ def handleRequest(sessionToken: str, requestKind, *arg):
     # Validate SessionToken
     userObject = None
 
-    if not user.activeSessions[sessionToken]:
+    if not activeSessions[sessionToken]:
         # Check database
         try:
             cursor.execute(
@@ -44,13 +43,13 @@ def handleRequest(sessionToken: str, requestKind, *arg):
 
             if row != None:
                 userId = row[0]
-                userObject = login.beginSession(userId, sessionToken)
+                userObject = begin_session(userId, sessionToken)
             else:
                 raise LookupError("Invalid session token")
         except Exception as err:
             print(f"Unable to load userdata: {err}")
     else:
-        userObject = user.activeSessions[sessionToken]
+        userObject = activeSessions[sessionToken]
 
     userObject.execute_user_request(requestKind, *arg)
 

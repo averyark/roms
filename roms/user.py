@@ -38,28 +38,26 @@
 """
 
 
-import importlib.util
 import pendulum
 import datetime
 import re
 from icecream import ic
 import sqlite3
 import threading
-import time
+from time import time
 #from . import session
-import importlib
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
 
-def validateDate(date_text):
+def validate_date(date_text):
     try:
         datetime.date.fromisoformat(date_text)
     except ValueError:
         raise ValueError("Incorrect data format, should be YYYY-MM-DD")
 
-def validateName(name):
+def validate_name(name):
     if not isinstance(name, str):
         raise TypeError("name must be a string")
     elif len(name) < 1 or len(name) > 50:
@@ -67,7 +65,7 @@ def validateName(name):
     elif re.search("^[a-zA-Z0-9 ]*", name).end() != len(name):
         raise ValueError("name must be alphabets, numbers, and space only")
 
-def validateEmail(email: str):
+def validate_email(email: str):
     matched = re.search(r"^[a-zA-Z0-9\.]+@[a-zA-Z0-9]*.com$", email)
     if not isinstance(email, str):
         raise TypeError("email must be a string")
@@ -76,7 +74,7 @@ def validateEmail(email: str):
     elif not matched or matched.end() != len(email):
         raise ValueError("invalid email format")
 
-def validatePassword(password: str):
+def validate_password(password: str):
     matched = re.search(r"^[a-zA-Z0-9!\"#\$%\&'\(\)\*\+,\-:;<=>\?@\[\]\^_`\{\|\}~\.]*", password)
 
     if not isinstance(password, str):
@@ -90,15 +88,15 @@ def validatePassword(password: str):
     elif not matched or matched.end() != len(password):
         raise ValueError("password must be alphabet, number or #~`!.@#$%^&*()_-+={[}]|:;\"'<,>?")
 
-def validateUserData(data: dict):
+def validate_user_data(data: dict):
     if not dict(data):
         raise TypeError("data must be a dictionary")
 
-    validatePassword(data.get("password"))
-    validateName(data.get("firstName"))
-    validateName(data.get("lastName"))
-    validateDate(data.get("birthday"))
-    validateEmail(data.get("email"))
+    validate_password(data.get("password"))
+    validate_name(data.get("firstName"))
+    validate_name(data.get("lastName"))
+    validate_date(data.get("birthday"))
+    validate_email(data.get("email"))
 
 userPermissionRanks = {
     'Manager': 255,
@@ -107,7 +105,7 @@ userPermissionRanks = {
     'Customer': 10
 }
 
-from ..user_classes import cashier, chef, customer, manager
+from . import cashier, chef, customer, manager
 
 userPermissionModules = {
     'Manager': manager,
@@ -116,7 +114,7 @@ userPermissionModules = {
     'Customer': customer
 }
 
-def getUserClass(userPermission):
+def get_user_class(userPermission):
     userClassName = None
     for className, classRank in userPermissionRanks.items():
         if userPermission < classRank:
@@ -149,13 +147,11 @@ class User:
         self.permission = data.get("permission") or 1
         self.sessionToken = sessionToken
         self.destructing = False
-        self.lastActive = time.time()
+        self.lastActive = time()
 
-        self.userClass = getUserClass(self.permission)
+        self.userClass = get_user_class(self.permission)
 
         activeSessions[self.sessionToken] = self
-
-        print(activeSessions)
 
     def syncdata(self):
         # Save data
@@ -202,14 +198,14 @@ class User:
         if self.destructing:
             return
 
-        expireSession(self.userId)
+        expire_session(self.userId)
 
         self.destruct()
 
     def set_permission(self, newPermission):
         assert type(userPermissionRanks[newPermission])!= None
         self.userPermission = userPermissionRanks.get(newPermission)
-        self.userClass = getUserClass(newPermission)
+        self.userClass = get_user_class(newPermission)
         self.syncdata()
 
     def get_birthday(self):
@@ -229,7 +225,7 @@ class User:
     def __str__(self):
         return f"{self.getname()}"
 
-def beginSession(userId: int, sessionToken: str) -> User:
+def begin_session(userId: int, sessionToken: str) -> User:
     userdata = None
     try:
         cursor.execute(
@@ -263,7 +259,7 @@ def beginSession(userId: int, sessionToken: str) -> User:
 
     return User(userdata, sessionToken)
 
-def expireSession(userId) -> None:
+def expire_session(userId) -> None:
     try:
         cursor.execute(
             f'''
@@ -295,12 +291,12 @@ def expireSession(userId) -> None:
 # Expire session after 1 hour of inactivity for the sake of saving memory
 EXPIRE_INTERVAL = 3600 # 1 Hour
 # flush
-def cleanupSessions():
-    now = time.time()
+def cleanup_sessions():
+    now = time()
     for self in activeSessions.values():
         if now - self.lastActive > EXPIRE_INTERVAL:
             self.destruct()
 
 def __init__():
-    threading.Timer(60, cleanupSessions).start()
+    threading.Timer(60, cleanup_sessions).start()
     print("loaded")

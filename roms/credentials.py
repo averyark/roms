@@ -37,7 +37,7 @@ cursor.execute(
 )
 db.commit()
 
-def validateCredentials(userId: str, input: str):
+def validate_credentials(userId: str, input: str):
     if str(userId) == None or str(input) == None:
         return False
 
@@ -55,7 +55,7 @@ def validateCredentials(userId: str, input: str):
     else:
         return False
 
-def setCredentials(userId: int, password: str):
+def set_credentials(userId: int, password: str):
     cursor.execute(
         f'''
             INSERT INTO Credentials(

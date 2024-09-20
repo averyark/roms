@@ -4,7 +4,7 @@
 
 import sqlite3
 from icecream import ic
-from ..account import login
+import login
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
@@ -12,7 +12,7 @@ cursor = db.cursor()
 
 def editUserCredentials(email: str, newPassword: str):
     try:
-        userId = login.getUserIdForEmail(email)
+        userId = login.get_userid_from_email(email)
         cursor.execute(
             f'''
                 UPDATE Credentials
