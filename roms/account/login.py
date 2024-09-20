@@ -23,7 +23,7 @@ from icecream import ic
 import sqlite3
 import uuid
 
-from . import credentials, user
+import credentials, user
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
@@ -32,8 +32,10 @@ cursor = db.cursor()
 cursor.execute(
     '''
         CREATE TABLE IF NOT EXISTS UserSessionTokens(
-            userId INTEGER PRIMARY KEY,
-            token NVARCHAR(50)
+            userId INTEGER NOT NULL,
+            token NVARCHAR(255) NOT NULL,
+
+            PRIMARY KEY (userId, token)
         )
     '''
 )
@@ -41,36 +43,15 @@ db.commit()
 
 def login(userId: int, credential: str) -> None:
     # validate credentials
-    if credentials.validateCredentials(userId, credential):
+    if not credentials.validateCredentials(userId, credential):
         raise RuntimeError("Invalid credentials")
-
-    # attempt to session lock
-    # sessionLockSuccessful = False
-
-    # try:
-    #     cursor.execute(
-    #         f'''
-    #             UPDATE Userdata
-    #             SET ACTIVE_SESSION = {sessionId}
-    #             WHERE id IS {userId}
-    #         '''
-    #     )
-    # except Exception as err:
-    #     db.rollback()
-    #     sessionLockSuccessful = False
-    #     print(f"Login failed: {err}")
-    # else:
-    #     sessionLockSuccessful = True
-
-    # if not sessionLockSuccessful:
-    #     raise RuntimeError("Unable to lock session")
 
     sessionToken = None
 
     try:
         cursor.execute(
             f'''
-                SELECT * FROM UserSessionTokens
+                SELECT token FROM UserSessionTokens
                 WHERE userId IS {userId}
             '''
         )
@@ -79,14 +60,32 @@ def login(userId: int, credential: str) -> None:
         if row != None:
             sessionToken = row[0]
         else:
-            sessionToken = uuid.uuid1()
+            sessionToken = str(uuid.uuid1())
+            
+            cursor.execute(
+            f'''
+                INSERT INTO UserSessionTokens(
+                    userId, token
+                ) VALUES (
+                    {userId},
+                    '{sessionToken}'
+                )
+            '''
+        )
     except Exception as err:
+        sessionToken = None
         print(f"Unable to load userdata: {err}")
+
+    ic(sessionToken)
+
+    if not sessionToken:
+        print("User doesn't have a sessionToken")
+        return
 
     return user.beginSession(userId, sessionToken)
 
 def getUserIdForEmail(email: str) -> int:
-    userid = None
+    userId = None
     try:
         cursor.execute(
             f'''
@@ -95,9 +94,34 @@ def getUserIdForEmail(email: str) -> int:
                 FROM Userdata WHERE email IS '{email}'
             '''
         )
+        userId = cursor.fetchone()[0]
     except Exception as err:
-        raise RuntimeError(f"Failed to retrieve userId: {err}")
+        pass
 
-    return userid
+    return userId
 
-#login(getUserIdForEmail("email@gmail.com"), "SomePassword@12345")
+login(getUserIdForEmail("email@gmail.com"), "SomePassword@123456")
+
+# print(cursor.execute(
+#     f'''
+#         SELECT
+#             *
+#         FROM UserSessionTokens
+#     '''
+# ).fetchall())
+
+# print(cursor.execute(
+#     f'''
+#         SELECT
+#             *
+#         FROM Credentials
+#     '''
+# ).fetchall())
+
+# print(cursor.execute(
+#     f'''
+#         SELECT
+#             *
+#         FROM Userdata
+#     '''
+# ).fetchall())

@@ -26,7 +26,7 @@
         credentialsPath: Path to the mock database file.
         db: SQLite database connection object.
         cursor: SQLite database cursor object.
-        UserPermissionRanks: Dictionary mapping user roles to their permission ranks.
+        userPermissionRanks: Dictionary mapping user roles to their permission ranks.
         PermissionClass: Dictionary mapping user roles to their respective classes.
         activeSessions: Dictionary to keep track of active user sessions.
         EXPIRE_INTERVAL: Time interval (in seconds) after which inactive sessions are expired.
@@ -36,6 +36,7 @@
         and permission updates.
         - The `cleanupSessions` function is scheduled to run every 60 seconds to clean up inactive sessions.
 """
+
 
 import importlib.util
 import pendulum
@@ -99,24 +100,33 @@ def validateUserData(data: dict):
     validateDate(data.get("birthday"))
     validateEmail(data.get("email"))
 
-UserPermissionRanks = {
+userPermissionRanks = {
     'Manager': 255,
     'Chef': 100,
     'Cashier': 50,
     'Customer': 10
 }
 
+from ..user_classes import cashier, chef, customer, manager
+
+userPermissionModules = {
+    'Manager': manager,
+    'Chef': chef,
+    'Cashier': cashier,
+    'Customer': customer
+}
+
 def getUserClass(userPermission):
     userClassName = None
-    for className, classRank in UserPermissionRanks:
+    for className, classRank in userPermissionRanks.items():
         if userPermission < classRank:
             continue
 
         userClassName = className
+        return userPermissionModules.get(className)
 
     if userClassName != None:
-        spec = importlib.util.spec_from_file_location(userClassName, "src/user_classes/")
-        return importlib.util.module_from_spec(spec)
+        return
 
     return None
 
@@ -131,17 +141,17 @@ activeSessions = {}
 class User:
     # Contruct
     def __init__(self, data, sessionToken):
-        self.userId = data.id
-        self.firstName = data.firstName
-        self.lastName = data.lastName
-        self.email = data.email
-        self.birthday = data.birthday
-        self.userPermission = data.userPermission or 1
+        self.userId = data.get("id")
+        self.firstName = data.get("firstName")
+        self.lastName = data.get("lastName")
+        self.email = data.get("data.email")
+        self.birthday = data.get("data.birthday")
+        self.permission = data.get("permission") or 1
         self.sessionToken = sessionToken
         self.destructing = False
         self.lastActive = time.time()
 
-        self.userClass = getUserClass()
+        self.userClass = getUserClass(self.permission)
 
         activeSessions[self.sessionToken] = self
 
@@ -169,7 +179,7 @@ class User:
                         lastName = {self.lastName},
                         email = {self.email},
                         birthday = {self.birthday},
-                        userPermission = {self.userPermission}
+                        permission = {self.permission}
                     WHERE id IS {self.userId}
                 '''
             )
@@ -197,8 +207,8 @@ class User:
         self.destruct()
 
     def set_permission(self, newPermission):
-        assert type(UserPermissionRanks[newPermission])!= None
-        self.userPermission = UserPermissionRanks.get(newPermission)
+        assert type(userPermissionRanks[newPermission])!= None
+        self.userPermission = userPermissionRanks.get(newPermission)
         self.userClass = getUserClass(newPermission)
         self.syncdata()
 
@@ -212,6 +222,8 @@ class User:
         if self.userClass.functions.index(requestKind) == None:
             raise ValueError(f'RequestKind "{requestKind}" does not exist for permission rank: {self.userPermission}')
 
+        self.lastActive = time.time
+
         self.userClass[requestKind](*arg)
 
     def __str__(self):
@@ -223,21 +235,24 @@ def beginSession(userId: int, sessionToken: str) -> User:
         cursor.execute(
             f'''
                 SELECT
+                    id,
                     firstName,
                     lastName,
                     email,
                     birthday,
-                    userPermission
+                    permission
                 FROM Userdata WHERE id IS {userId}
             '''
         )
         row = cursor.fetchone()
+        ic(row)
         userdata = {
-            ["firstName"]: row[0],
-            ["lastName"]: row[1],
-            ["email"]: row[2],
-            ["birthday"]: row[3],
-            ["userPermission"]: row[4]
+            "id": row[0],
+            "firstName": row[1],
+            "lastName": row[2],
+            "email": row[3],
+            "birthday": row[4],
+            "permission": row[5]
         }
     except Exception as err:
         userdata = None

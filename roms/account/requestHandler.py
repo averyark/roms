@@ -21,6 +21,7 @@ import user
 import login
 from icecream import ic
 import sqlite3
+import fastapi
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
@@ -52,3 +53,5 @@ def handleRequest(sessionToken: str, requestKind, *arg):
         userObject = user.activeSessions[sessionToken]
 
     userObject.execute_user_request(requestKind, *arg)
+
+#fastapi

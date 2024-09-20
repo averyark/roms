@@ -32,7 +32,7 @@ cursor.execute(
             firstName NVARCHAR(50) NOT NULL,
             lastName NVARCHAR(50) NOT NULL,
             birthday NVARCHAR(50) NOT NULL,
-            permission INTEGER,
+            permission INTEGER
         )
     '''
 )
@@ -95,7 +95,7 @@ def signup(data: dict, permission: int) -> User:
 #      'email': 'email@gmail.com',
 #      'birthday': '2005-09-21',
 #      'password': "SomePassword@123456",
-#  }, user.UserPermissionClass.get("Manager"))
+#  }, user.UserPermissionRanks.get("Manager"))
 
 # for row in cursor.execute('SELECT * FROM Userdata'):
 #     print(row)

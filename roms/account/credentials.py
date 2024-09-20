@@ -38,6 +38,9 @@ cursor.execute(
 db.commit()
 
 def validateCredentials(userId: str, input: str):
+    if str(userId) == None or str(input) == None:
+        return False
+
     cursor.execute(
         f'''
             SELECT DISTINCT password FROM Credentials WHERE userId IS '{userId}'
