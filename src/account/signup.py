@@ -3,22 +3,14 @@
 # @authors: averyark
 
 """
-@fileName: signup.py
-@creation_date: 14/09/2024
-@authors: averyark
-
-This module handles the signup process for new users. It includes the following functionalities:
-- Validating user data
-- Checking for existing users in the database
-- Inserting new user data into the database
-- Setting user credentials
+This module handles the signup process for new users. It includes functions to
+validate user data, check for existing users, and insert new user data into a
+SQLite database. Additionally, it sets user credentials upon successful signup.
 
 Functions:
     signup(data: dict, permission: int) -> User:
-        Validates user data, checks for existing users, inserts new user data into the database, and sets user credentials.
-
-Usage:
-    Call the signup function with a dictionary containing user data and a permission level to register a new user.
+        Validates user data, checks for existing users, and inserts new user
+        data into the database. Sets user credentials if signup is successful.
 """
 
 from user import User
@@ -40,7 +32,7 @@ cursor.execute(
             firstName NVARCHAR(50) NOT NULL,
             lastName NVARCHAR(50) NOT NULL,
             birthday NVARCHAR(50) NOT NULL,
-            permission INTEGER
+            permission INTEGER,
         )
     '''
 )

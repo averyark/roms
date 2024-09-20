@@ -2,7 +2,7 @@
 # @creation_date: 18/09/2024
 # @authors: averyark
 
-from account import user
+from . import user
 
 # birthday constraint test
 def test_validateBirthday():

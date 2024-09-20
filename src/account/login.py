@@ -1,62 +1,48 @@
 # @fileName: login.py
 # @creation_date: 19/09/2024
-# @authors:
+# @authors: averyark
 
 """
-This module provides functionality for user login and retrieval of user ID based on email.
+This module provides functionalities for user login, session management, and user data retrieval.
 
 Functions:
-    login(userId: int, credential: str) -> user.User:
-        Authenticates a user based on user ID and credential, and returns a User object with session ID.
+    beginSession(userId: int, sessionToken: str) -> user.User:
+        Begins a user session by retrieving user data and returning a User object.
+
+    login(userId: int, credential: str) -> None:
+        Logs in a user by validating credentials and managing session tokens.
+
+    expireSession(userId: int) -> None:
+        Expires a user session by deleting the session token and committing changes to the database.
 
     getUserIdForEmail(email: str) -> int:
-        Retrieves the user ID associated with the given email address.
+        Retrieves the user ID associated with a given email address.
 """
 
 from icecream import ic
 import sqlite3
 import uuid
-import credentials
-import user
+
+from . import credentials, user
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
 
-def login(userId: int, credential: str):
-    sessionId = uuid.uuid1()
+cursor.execute(
+    '''
+        CREATE TABLE IF NOT EXISTS UserSessionTokens(
+            userId INTEGER PRIMARY KEY,
+            token NVARCHAR(50)
+        )
+    '''
+)
+db.commit()
 
+def login(userId: int, credential: str) -> None:
     # validate credentials
     if credentials.validateCredentials(userId, credential):
         raise RuntimeError("Invalid credentials")
-
-    userdata = None
-    try:
-        cursor.execute(
-            f'''
-                SELECT
-                    firstName,
-                    lastName,
-                    email,
-                    birthday,
-                    userPermission
-                FROM Userdata WHERE id IS {userId}
-            '''
-        )
-        row = cursor.fetchone()
-        userdata = {
-            ["firstName"]: row[0],
-            ["lastName"]: row[1],
-            ["email"]: row[2],
-            ["birthday"]: row[3],
-            ["userPermission"]: row[4]
-        }
-    except Exception as err:
-        userdata = None
-        print(f"Unable to load userdata {err}")
-
-    if not userdata:
-        raise RuntimeError("Unable to load userdata")
 
     # attempt to session lock
     # sessionLockSuccessful = False
@@ -79,9 +65,28 @@ def login(userId: int, credential: str):
     # if not sessionLockSuccessful:
     #     raise RuntimeError("Unable to lock session")
 
-    return user.User(userdata, sessionId)
+    sessionToken = None
 
-def getUserIdForEmail(email: str):
+    try:
+        cursor.execute(
+            f'''
+                SELECT * FROM UserSessionTokens
+                WHERE userId IS {userId}
+            '''
+        )
+        row = cursor.fetchone()
+
+        if row != None:
+            sessionToken = row[0]
+        else:
+            sessionToken = uuid.uuid1()
+    except Exception as err:
+        print(f"Unable to load userdata: {err}")
+
+    return user.beginSession(userId, sessionToken)
+
+def getUserIdForEmail(email: str) -> int:
+    userid = None
     try:
         cursor.execute(
             f'''
@@ -92,5 +97,7 @@ def getUserIdForEmail(email: str):
         )
     except Exception as err:
         raise RuntimeError(f"Failed to retrieve userId: {err}")
+
+    return userid
 
 #login(getUserIdForEmail("email@gmail.com"), "SomePassword@12345")

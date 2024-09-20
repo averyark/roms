@@ -19,8 +19,6 @@ Database Schema:
 # @creation_date: 18/09/2024
 # @authors: averyark
 
-
-
 import sqlite3
 from icecream import ic
 

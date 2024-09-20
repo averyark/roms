@@ -1,36 +1,52 @@
 # @fileName: user.py
 # @creation_date: 14/09/2024
 # @authors: averyark
-
 """
-This module provides functionality for user account management, including validation of user data and synchronization with a SQLite database.
+    This module provides user account management functionalities including validation,
+    user session handling, and permission management.
 
-Classes:
-    User: Represents a user with attributes and methods for managing user data.
+    Classes:
+        User: Represents a user with methods for data synchronization, session management,
+            and permission handling.
 
-Functions:
-    validateDate(date_text): Validates if the provided date string is in the correct format (YYYY-MM-DD).
-    validateName(name): Validates if the provided name is a string with 1-50 characters and contains only alphabets, numbers, and spaces.
-    validateEmail(email): Validates if the provided email is a string with 1-50 characters and follows the format of a valid email address.
-    validatePassword(password): Validates if the provided password is a string with 8-50 characters, contains at least one number and one alphabet, and includes only allowed special characters.
-    validateUserData(data): Validates a dictionary of user data by checking the password, first name, last name, birthday, and email.
+    Functions:
+        validateDate(date_text): Validates if the given date is in the correct format (YYYY-MM-DD).
+        validateName(name): Validates if the given name is a string with 1-50 characters and
+                            contains only alphabets, numbers, and spaces.
+        validateEmail(email): Validates if the given email is a string with 1-50 characters and
+                            follows the correct email format.
+        validatePassword(password): Validates if the given password is a string with 8-50 characters,
+                                    contains at least one number and one alphabet, and includes
+                                    allowed special characters.
+        validateUserData(data): Validates user data dictionary for required fields.
+        getUserClass(userPermission): Returns the user class based on the user's permission rank.
+        cleanupSessions(): Cleans up inactive user sessions.
 
-User Class:
-    Methods:
-        __init__(self, data, sessionId): Initializes a User object with provided data and session ID.
-        syncdata(self): Synchronizes the user data with the database.
-        destruct(self): Destructor method that calls syncdata to save user data.
-        __str__(self): Returns the user's full name as a string.
-        set_permission(self, newPermission): Sets the user's permission level based on the provided role.
-        get_birthday(self): Returns the user's birthday as a Pendulum date object.
-        get_name(self): Returns the user's full name in "lastName firstName" format.
+    Constants:
+        credentialsPath: Path to the mock database file.
+        db: SQLite database connection object.
+        cursor: SQLite database cursor object.
+        UserPermissionRanks: Dictionary mapping user roles to their permission ranks.
+        PermissionClass: Dictionary mapping user roles to their respective classes.
+        activeSessions: Dictionary to keep track of active user sessions.
+        EXPIRE_INTERVAL: Time interval (in seconds) after which inactive sessions are expired.
+
+    Notes:
+        - The `User` class handles user data synchronization with the database, session management,
+        and permission updates.
+        - The `cleanupSessions` function is scheduled to run every 60 seconds to clean up inactive sessions.
 """
 
+import importlib.util
 import pendulum
 import datetime
 import re
 from icecream import ic
 import sqlite3
+import threading
+import time
+#from . import session
+import importlib
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
@@ -83,27 +99,58 @@ def validateUserData(data: dict):
     validateDate(data.get("birthday"))
     validateEmail(data.get("email"))
 
-UserPermissionClass = {
+UserPermissionRanks = {
     'Manager': 255,
     'Chef': 100,
     'Cashier': 50,
     'Customer': 10
 }
+
+def getUserClass(userPermission):
+    userClassName = None
+    for className, classRank in UserPermissionRanks:
+        if userPermission < classRank:
+            continue
+
+        userClassName = className
+
+    if userClassName != None:
+        spec = importlib.util.spec_from_file_location(userClassName, "src/user_classes/")
+        return importlib.util.module_from_spec(spec)
+
+    return None
+
+"""
+    Logout is different from destruct!
+    Logging out always trigger destruct but destruct doesn't mean the user is logout'd.
+"""
+# active user classes
+
+activeSessions = {}
+
 class User:
     # Contruct
-    def __init__(self, data, sessionId):
+    def __init__(self, data, sessionToken):
         self.userId = data.id
         self.firstName = data.firstName
         self.lastName = data.lastName
         self.email = data.email
         self.birthday = data.birthday
         self.userPermission = data.userPermission or 1
-        #self.sessionId = sessionId
+        self.sessionToken = sessionToken
+        self.destructing = False
+        self.lastActive = time.time()
+
+        self.userClass = getUserClass()
+
+        activeSessions[self.sessionToken] = self
+
+        print(activeSessions)
 
     def syncdata(self):
         # Save data
         try:
-            # Verify sessionId
+            # Verify sessionToken
             # cursor.execute(
             #     f'''
             #         SELECT
@@ -111,7 +158,7 @@ class User:
             #         FROM Userdata WHERE id IS {self.userId}
             #     '''
             # )
-            # if cursor.fetchone()[0] == self.sessionId:
+            # if cursor.fetchone()[0] == self.sessionToken:
             #     # Rejected: Uhh another session is active
             #     return
 
@@ -131,16 +178,28 @@ class User:
             print(f"Update data failed: {err}")
             db.rollback()
 
-    # Destruct
     def destruct(self):
+        if self.destructing:
+            return
+
+        self.destructing = True
         self.syncdata()
 
-    def __str__(self):
-        return f"{self.getname()}"
+        if activeSessions[self.sessionToken]:
+            del activeSessions[self.sessionToken]
+
+    def logout(self):
+        if self.destructing:
+            return
+
+        expireSession(self.userId)
+
+        self.destruct()
 
     def set_permission(self, newPermission):
-        assert type(UserPermissionClass[newPermission])!= None
-        self.userPermission = UserPermissionClass.get(newPermission)
+        assert type(UserPermissionRanks[newPermission])!= None
+        self.userPermission = UserPermissionRanks.get(newPermission)
+        self.userClass = getUserClass(newPermission)
         self.syncdata()
 
     def get_birthday(self):
@@ -149,7 +208,84 @@ class User:
     def get_name(self):
         return f"{self.lastName} {self.firstName}"
 
-# jianyi = User("Jian Yi", "Ting", "alwin@gmail.com", "2005-09-21")
+    def execute_user_request(self, requestKind, *arg):
+        if self.userClass.functions.index(requestKind) == None:
+            raise ValueError(f'RequestKind "{requestKind}" does not exist for permission rank: {self.userPermission}')
+
+        self.userClass[requestKind](*arg)
+
+    def __str__(self):
+        return f"{self.getname()}"
+
+def beginSession(userId: int, sessionToken: str) -> User:
+    userdata = None
+    try:
+        cursor.execute(
+            f'''
+                SELECT
+                    firstName,
+                    lastName,
+                    email,
+                    birthday,
+                    userPermission
+                FROM Userdata WHERE id IS {userId}
+            '''
+        )
+        row = cursor.fetchone()
+        userdata = {
+            ["firstName"]: row[0],
+            ["lastName"]: row[1],
+            ["email"]: row[2],
+            ["birthday"]: row[3],
+            ["userPermission"]: row[4]
+        }
+    except Exception as err:
+        userdata = None
+        print(f"Unable to load userdata {err}")
+
+    if not userdata:
+        raise RuntimeError("Unable to load userdata")
+
+    return User(userdata, sessionToken)
+
+def expireSession(userId) -> None:
+    try:
+        cursor.execute(
+            f'''
+                SELECT token FROM UserSessionTokens
+                WHERE userId IS {userId}
+            '''
+        )
+        row = cursor.fetchone()
+
+        if row == None:
+            raise LookupError("User does not have a session token")
+
+        cursor.execute(
+            f'''
+                DELETE FROM UserSessionTokens
+                WHERE userId IS {userId}
+            '''
+        )
+
+        activeSessions[row[0]].destruct()
+
+    except Exception as err:
+        print(f"Encountered an error: {err}")
+        db.rollback()
+    else:
+        db.commit()
+
+# Move to login.py
+# Expire session after 1 hour of inactivity for the sake of saving memory
+EXPIRE_INTERVAL = 3600 # 1 Hour
+# flush
+def cleanupSessions():
+    now = time.time()
+    for self in activeSessions.values():
+        if now - self.lastActive > EXPIRE_INTERVAL:
+            self.destruct()
 
 def __init__():
-     print("loaded")
+    threading.Timer(60, cleanupSessions).start()
+    print("loaded")
