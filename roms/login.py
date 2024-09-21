@@ -8,20 +8,100 @@ This module provides functionality for user login and session management.
 
 from icecream import ic
 import sqlite3
-import uuid
-from .credentials import validate_credentials
-from .user import begin_session
+from datetime import datetime, timezone, timedelta
+
+from .credentials import validate_credentials, SECRET_KEY, USE_ALGORITHM, JWT_EXPIRATION_MINUTES
+from .user import get_user, User
+from .api import app
+
+from jwt import encode as jwt_encode, decode as jwt_decode, ExpiredSignatureError
+from pydantic import BaseModel
+from fastapi import HTTPException, status, Depends
+from fastapi.security.oauth2 import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="account/swagger-login")
+
+from typing import Annotated
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
 
-def login(userId: int, credential: str) -> None:
-    # validate credentials
-    if not validate_credentials(userId, credential):
-        raise RuntimeError("Invalid credentials")
+# NOTE: Annotated[str, Depends(oauth2_scheme)] is for swagger interface
+async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
+    ic(token)
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
-    sessionToken = None
+    try:
+        # NOTE: Ignore _bcrypt.__about_ Error
+        payload = jwt_decode(token, SECRET_KEY, algorithms=[USE_ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+
+        # Check if the session token is still valid
+        # Users can invalidate tokens by logging out (logout is not implemented as of 21 sep)
+        cursor.execute(
+            f'''
+                SELECT * FROM UserSessionTokens
+                WHERE token IS '{token}'
+            '''
+        )
+
+        row = cursor.fetchone()
+
+        if row is None:
+            raise credentials_exception
+
+    except ExpiredSignatureError:
+        # Remove the session token from the database because it has expired
+        cursor.execute(
+            f'''
+                DELETE FROM UserSessionTokens
+                WHERE token IS {token}
+            '''
+        )
+        db.commit()
+        raise credentials_exception
+
+    user = get_user(user_id)
+
+    return user
+
+class validate_role:
+    def __init__(self, roles):
+        ic(roles)
+        self.roles = roles
+
+    def __call__(self, user: Annotated[User, Depends(authenticate)]):
+        ic(user)
+        if user.get_role() in self.roles:
+            return True
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Insufficient permissions"
+        )
+
+@app.get(path="/account/login")
+def login(userId: int, input: str) -> str:
+    # validate credentials
+    # TODO: timing attack fix
+    if userId is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+
+    if not validate_credentials(userId, input):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
 
     try:
         cursor.execute(
@@ -32,10 +112,14 @@ def login(userId: int, credential: str) -> None:
         )
         row = cursor.fetchone()
 
-        if row != None:
+        if not row is None:
             sessionToken = row[0]
         else:
-            sessionToken = str(uuid.uuid1())
+            # NOTE: Ignore _bcrypt.__about_ Error
+            sessionToken = jwt_encode({
+                "sub": userId,
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRATION_MINUTES),
+            }, SECRET_KEY , USE_ALGORITHM)
 
             cursor.execute(
                 f'''
@@ -53,13 +137,35 @@ def login(userId: int, credential: str) -> None:
         print(f"Unable to load userdata: {err}")
 
     if not sessionToken:
-        print("User doesn't have a sessionToken")
-        return
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error occurred"
+        )
 
-    return begin_session(userId, sessionToken)
+    return sessionToken
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# Login interface for swagger
+@app.post(path="/account/swagger-login")
+async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+    # retrieve the userid
+    sessionToken = login(get_userid_from_email(form.username), form.password)
+
+    if not sessionToken:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    ic(sessionToken)
+
+    return Token(access_token=sessionToken, token_type="bearer")
 
 def get_userid_from_email(email: str) -> int:
-    userId = None
     try:
         cursor.execute(
             f'''

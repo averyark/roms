@@ -8,35 +8,49 @@ This module provides functions to validate and set user credentials using an SQL
 import sqlite3
 from icecream import ic
 
+from jwt.exceptions import InvalidTokenError
+from passlib.context import CryptContext
+
+# run "openssl rand -hex 32" in terminal to generate a new secret!
+# NOTE: This secret is exposed and only intended for demonstrating purposes!
+SECRET_KEY = "74faf15b3edd4a5d863ebc89d548cf5b19e5a84dd3817f7fb70dcefad009c208"
+USE_ALGORITHM = "HS256"
+JWT_EXPIRATION_MINUTES = 259200
+
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
 
-def validate_credentials(userId: str, input: str):
-    if str(userId) == None or str(input) == None:
-        return False
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def validate_credentials(user_id: int, input: str):
     cursor.execute(
         f'''
-            SELECT DISTINCT password FROM Credentials WHERE userId IS '{userId}'
+            SELECT DISTINCT
+                id,
+                password
+            FROM Credentials WHERE id IS '{user_id}'
         '''
     )
+
     row = cursor.fetchone()
 
-    ic(row)
+    if not row:
+        raise LookupError("User doesn't exist")
 
-    if row and row[0] == input:
+    if pwd_context.verify(input, row[1]):
         return True
     else:
         return False
 
-def set_credentials(userId: int, password: str):
+def set_credentials(email: str, password: str):
+    hashed_password = pwd_context.hash(password)
     cursor.execute(
         f'''
             INSERT INTO Credentials(
-                id, userId, password
+                id, email, password
             ) VALUES (
-                NULL, '{userId}', '{password}'
+                NULL, '{email}', '{hashed_password}'
             )
         '''
     )

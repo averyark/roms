@@ -3,8 +3,12 @@
 # @authors: averyark
 
 from roms import login, get_userid_from_email
-from roms import signup
+from roms import signup, create_account, UserInfo
 from roms import userPermissionRanks
+from roms import app
+
+from fastapi import Depends, FastAPI, HTTPException, status
+from typing import Annotated
 
 from icecream import ic
 import sqlite3
@@ -13,26 +17,38 @@ db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
 
 def test_viewall():
+    print(f"{'-'*20} Userdata {'-'*19}")
     for row in cursor.execute('SELECT * FROM Userdata'):
         ic(row)
 
+    print(f"{'-'*15} UserSessionTokens {'-'*15}")
     for row in cursor.execute('SELECT * FROM UserSessionTokens'):
         ic(row)
 
+    print(f"{'-'*18} Credentials {'-'*18}")
     for row in cursor.execute('SELECT * FROM Credentials'):
         ic(row)
 
 def test_signup():
-    signup({
-        'firstName': 'first',
-        'lastName': 'last',
-        'email': 'email@gmail.com',
-        'birthday': '2005-09-21',
-        'password': "SomePassword@123456",
-    }, userPermissionRanks.get("Manager"))
+    signup(data=UserInfo(
+        email="customer1@gmail.com",
+        birthday="2005-09-21",
+        password="somepass12",
+        first_name="alan",
+        last_name="beth"
+    ))
+
+def test_signup_manager():
+    create_account(data=UserInfo(
+        email="manager@roms.com",
+        birthday="2005-09-21",
+        password="manager%password122",
+        first_name="ger",
+        last_name="mana"
+    ), permissionLevel=255)
 
 def test_login():
-    login(get_userid_from_email("email@gmail.com"), "SomePassword@123456")
+    login(get_userid_from_email("manager@roms.com"), "manager%password122")
 
 def create_database_tables():
     cursor.execute(
@@ -43,7 +59,7 @@ def create_database_tables():
                 firstName NVARCHAR(50) NOT NULL,
                 lastName NVARCHAR(50) NOT NULL,
                 birthday NVARCHAR(50) NOT NULL,
-                permission INTEGER
+                permissionLevel INTEGER
             )
         '''
     )
@@ -61,7 +77,7 @@ def create_database_tables():
         '''
             CREATE TABLE IF NOT EXISTS Credentials(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                userId INTEGER NOT NULL,
+                email INTEGER NOT NULL,
                 password NVARCHAR(50) NOT NULL
             )
         '''
@@ -70,6 +86,9 @@ def create_database_tables():
 
 if __name__ == '__main__':
     create_database_tables()
+    db.commit()
+    # Create management account
+    #test_signup_manager
     #test_signup()
     #test_login()
     test_viewall()

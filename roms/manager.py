@@ -1,27 +1,19 @@
-import typing
+from typing import Annotated, TYPE_CHECKING
+from fastapi import Depends
 
-if typing.TYPE_CHECKING:
-    from .user import User
+from .login import authenticate, validate_role
+from .api import app
+from .user import User
 
 # APIS
-def request_edit_user_account(self: 'User' , requestKind: str, *arg):
-    if requestKind == "EditUserCredentials":
-        # Do something
-        pass
-    elif requestKind == "EditFirstName":
-        # Do something
-        pass
-    elif requestKind == "EditLastName":
-        # Do something
-        pass
-    elif requestKind == "EditEmail":
-        # Do something
-        pass
-
-def request_order_details(self: 'User'):
-    pass
-
-def request_view_feedbacks(self: 'User', dish: str):
+@app.post("/account/edit/credentials/")
+def edit_credentials(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Customer"]))
+        ],
+    userId: int
+):
+    print(f"TEST EDIT {userId}")
     pass
 
 if __name__ == '__main__':

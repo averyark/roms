@@ -7,64 +7,18 @@ This module provides functionalities for user management, including validation, 
 """
 
 import pendulum
-import datetime
-import re
 from icecream import ic
+from pydantic import BaseModel
+
 import sqlite3
 import threading
 from time import time
-#from . import session
+
+from .validate import validate_user_data
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
-
-def validate_date(date_text):
-    try:
-        datetime.date.fromisoformat(date_text)
-    except ValueError:
-        raise ValueError("Incorrect data format, should be YYYY-MM-DD")
-
-def validate_name(name):
-    if not isinstance(name, str):
-        raise TypeError("name must be a string")
-    elif len(name) < 1 or len(name) > 50:
-        raise ValueError("name must have 1-50 characters")
-    elif re.search("^[a-zA-Z0-9 ]*", name).end() != len(name):
-        raise ValueError("name must be alphabets, numbers, and space only")
-
-def validate_email(email: str):
-    matched = re.search(r"^[a-zA-Z0-9\.]+@[a-zA-Z0-9]*.com$", email)
-    if not isinstance(email, str):
-        raise TypeError("email must be a string")
-    elif len(email) < 1 or len(email) > 50:
-        raise ValueError("email must have 1-50 characters")
-    elif not matched or matched.end() != len(email):
-        raise ValueError("invalid email format")
-
-def validate_password(password: str):
-    matched = re.search(r"^[a-zA-Z0-9!\"#\$%\&'\(\)\*\+,\-:;<=>\?@\[\]\^_`\{\|\}~\.]*", password)
-
-    if not isinstance(password, str):
-        raise TypeError("password must be a string")
-    elif len(password) < 8 or len(password) > 50:
-        raise ValueError("password must have 8-50 characters")
-    elif len(re.findall(r"[0-9]", password)) < 1:
-        raise ValueError("password must have at least 1 number")
-    elif len(re.findall(r"[a-zA-Z]", password)) < 1:
-        raise ValueError("password must have at least 1 alphabet")
-    elif not matched or matched.end() != len(password):
-        raise ValueError("password must be alphabet, number or #~`!.@#$%^&*()_-+={[}]|:;\"'<,>?")
-
-def validate_user_data(data: dict):
-    if not dict(data):
-        raise TypeError("data must be a dictionary")
-
-    validate_password(data.get("password"))
-    validate_name(data.get("firstName"))
-    validate_name(data.get("lastName"))
-    validate_date(data.get("birthday"))
-    validate_email(data.get("email"))
 
 userPermissionRanks = {
     'Manager': 255,
@@ -73,25 +27,15 @@ userPermissionRanks = {
     'Customer': 10
 }
 
-from . import cashier, chef, customer, manager
-
-userPermissionModules = {
-    'Manager': manager,
-    'Chef': chef,
-    'Cashier': cashier,
-    'Customer': customer
-}
-
-def get_user_class(userPermission):
-    userClassName = None
+def get_user_class(userPermission: int):
     for className, classRank in userPermissionRanks.items():
         if userPermission < classRank:
             continue
 
         userClassName = className
-        return userPermissionModules.get(className)
+        return userClassName
 
-    if userClassName != None:
+    if not userClassName is None:
         return
 
     return None
@@ -100,101 +44,22 @@ def get_user_class(userPermission):
     Logout is different from destruct!
     Logging out always trigger destruct but destruct doesn't mean the user is logout'd.
 """
-# active user classes
+class User(BaseModel):
+    user_id: int
+    email: str
+    first_name: str
+    last_name: str
+    birthday: str
+    permissionLevel: int
 
-activeSessions = {}
+    def get_role(self):
+        ic(self, self.permissionLevel)
+        return get_user_class(self.permissionLevel)
+    
+    def get_birthday_object(self):
+       return pendulum.from_format(self.birthday, "YYYY-MM-DD")
 
-class User:
-    # Contruct
-    def __init__(self, data, sessionToken):
-        self.userId = data.get("id")
-        self.firstName = data.get("firstName")
-        self.lastName = data.get("lastName")
-        self.email = data.get("data.email")
-        self.birthday = data.get("data.birthday")
-        self.permission = data.get("permission") or 1
-        self.sessionToken = sessionToken
-        self.destructing = False
-        self.lastActive = time()
-
-        self.userClass = get_user_class(self.permission)
-
-        activeSessions[self.sessionToken] = self
-
-    def syncdata(self):
-        # Save data
-        try:
-            # Verify sessionToken
-            # cursor.execute(
-            #     f'''
-            #         SELECT
-            #             ACTIVE_SESSION
-            #         FROM Userdata WHERE id IS {self.userId}
-            #     '''
-            # )
-            # if cursor.fetchone()[0] == self.sessionToken:
-            #     # Rejected: Uhh another session is active
-            #     return
-
-            cursor.execute(
-                f'''
-                    UPDATE Userdata
-                    SET firstName = {self.firstName},
-                        lastName = {self.lastName},
-                        email = {self.email},
-                        birthday = {self.birthday},
-                        permission = {self.permission}
-                    WHERE id IS {self.userId}
-                '''
-            )
-            db.commit()
-        except Exception as err:
-            print(f"Update data failed: {err}")
-            db.rollback()
-
-    def destruct(self):
-        if self.destructing:
-            return
-
-        self.destructing = True
-        self.syncdata()
-
-        if activeSessions[self.sessionToken]:
-            del activeSessions[self.sessionToken]
-
-    def logout(self):
-        if self.destructing:
-            return
-
-        expire_session(self.userId)
-
-        self.destruct()
-
-    def set_permission(self, newPermission):
-        assert type(userPermissionRanks[newPermission])!= None
-        self.userPermission = userPermissionRanks.get(newPermission)
-        self.userClass = get_user_class(newPermission)
-        self.syncdata()
-
-    def get_birthday(self):
-        return pendulum.from_format(self.birthday, "YYYY-MM-DD")
-
-    def get_name(self):
-        return f"{self.lastName} {self.firstName}"
-
-    def execute_user_request(self, requestKind, *arg):
-        if self.userClass.functions.index(requestKind) == None:
-            raise ValueError(f'RequestKind "{requestKind}" does not exist for permission rank: {self.userPermission}')
-
-        self.lastActive = time.time
-
-        self.userClass[requestKind](*arg)
-
-    def __str__(self):
-        return f"{self.getname()}"
-
-def begin_session(userId: int, sessionToken: str) -> User:
-    userdata = None
+def get_user(user_id: int) -> User:
     try:
         cursor.execute(
             f'''
@@ -204,20 +69,13 @@ def begin_session(userId: int, sessionToken: str) -> User:
                     lastName,
                     email,
                     birthday,
-                    permission
-                FROM Userdata WHERE id IS {userId}
+                    permissionLevel
+                FROM Userdata WHERE id IS {user_id}
             '''
         )
         row = cursor.fetchone()
-        ic(row)
-        userdata = {
-            "id": row[0],
-            "firstName": row[1],
-            "lastName": row[2],
-            "email": row[3],
-            "birthday": row[4],
-            "permission": row[5]
-        }
+
+        userdata = row
     except Exception as err:
         userdata = None
         print(f"Unable to load userdata {err}")
@@ -225,46 +83,11 @@ def begin_session(userId: int, sessionToken: str) -> User:
     if not userdata:
         raise RuntimeError("Unable to load userdata")
 
-    return User(userdata, sessionToken)
-
-def expire_session(userId) -> None:
-    try:
-        cursor.execute(
-            f'''
-                SELECT token FROM UserSessionTokens
-                WHERE userId IS {userId}
-            '''
-        )
-        row = cursor.fetchone()
-
-        if row == None:
-            raise LookupError("User does not have a session token")
-
-        cursor.execute(
-            f'''
-                DELETE FROM UserSessionTokens
-                WHERE userId IS {userId}
-            '''
-        )
-
-        activeSessions[row[0]].destruct()
-
-    except Exception as err:
-        print(f"Encountered an error: {err}")
-        db.rollback()
-    else:
-        db.commit()
-
-# Move to login.py
-# Expire session after 1 hour of inactivity for the sake of saving memory
-EXPIRE_INTERVAL = 3600 # 1 Hour
-# flush
-def cleanup_sessions():
-    now = time()
-    for self in activeSessions.values():
-        if now - self.lastActive > EXPIRE_INTERVAL:
-            self.destruct()
-
-def __init__():
-    threading.Timer(60, cleanup_sessions).start()
-    print("loaded")
+    return User(
+        user_id=row[0],
+        first_name=row[1],
+        last_name=row[2],
+        email=row[3],
+        birthday=row[4],
+        permissionLevel=row[5],
+    )

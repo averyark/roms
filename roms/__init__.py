@@ -1,6 +1,13 @@
-from .signup import signup
-from .login import login, get_userid_from_email
-from .user import userPermissionRanks
+from .signup import *
+from .login import *
+from .user import *
+
+from .api import *
+
+from .manager import *
+from .chef import *
+from .cashier import *
+from .customer import *
 
 if __name__ == '__main__':
     pass

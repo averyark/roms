@@ -7,21 +7,57 @@ This module handles the signup process for new users. It includes functions to v
 """
 
 from icecream import ic
+from pydantic import BaseModel
 
 from .user import User, validate_user_data
 from .credentials import set_credentials
+from .api import app
+
+from fastapi import HTTPException, status
+from fastapi import Depends
+from typing import Annotated
 
 import sqlite3
 credentialsPath = 'mock-database.db'
 db = sqlite3.connect(credentialsPath)
 cursor = db.cursor()
 
-def signup(data: dict, permission: int) -> User:
+class UserInfo(BaseModel):
+    birthday: str
+    first_name: str
+    last_name: str
+    email: str
+    password: str
+
+def create_userdata(data: UserInfo, userPermission: int):
+    cursor.execute(
+        f'''
+            INSERT INTO Userdata(
+                id,
+                email,
+                firstName,
+                lastName,
+                birthday,
+                permissionLevel
+                ) VALUES (
+                    NULL,
+                    '{data.email}',
+                    '{data.first_name}',
+                    '{data.last_name}',
+                    '{data.birthday}',
+                    {userPermission or "10"}
+                )
+        '''
+    )
+    db.commit()
+
+# NOTE: This is a management level api
+def create_account(data: UserInfo, permissionLevel):
     validate_user_data(data)
 
     cursor.execute(
         f'''
-            SELECT DISTINCT * FROM Userdata WHERE email IS '{data.get("email")}'
+            SELECT DISTINCT * FROM Userdata WHERE email IS '{data.email}'
         '''
     )
     row = cursor.fetchone()
@@ -30,38 +66,39 @@ def signup(data: dict, permission: int) -> User:
         raise LookupError("This email already exist in the database")
 
     try:
+        create_userdata(data, permissionLevel)
+        set_credentials(data.email, data.password)
+    except Exception as err:
+        raise err
+
+# NOTE: You cannot input permissionLevel from this api
+@app.post(path="/account/signup")
+def signup(data: UserInfo):
+    try:
+        validate_user_data(data)
+
         cursor.execute(
             f'''
-                INSERT INTO Userdata(
-                    id, email, firstName, lastName, birthday, permission
-                ) VALUES (
-                    NULL,
-                    '{data.get('email')}',
-                    '{data.get('firstName')}',
-                    '{data.get('lastName')}',
-                    '{data.get('birthday')}',
-                    {permission}
-                )
+                SELECT DISTINCT * FROM Userdata WHERE email IS '{data.email}'
             '''
         )
-
-        # obtain the userId
-        cursor.execute(
-            f'''
-                SELECT DISTINCT id FROM Userdata WHERE email IS '{data.get('email')}'
-            '''
-        )
-
         row = cursor.fetchone()
 
         if row:
-            db.commit()
-            set_credentials(row[0], data.get('password'))
-        else:
-            # wait what?
-            db.rollback()
+            raise LookupError("This email already exist in the database")
+
+        try:
+            create_userdata(data, 10)
+            set_credentials(data.email, data.password)
+        except Exception as err:
+            raise err
+    except LookupError as err:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=err
+        )
     except Exception as err:
-        # rollback potential changes that are performed before point o f error
-        db.rollback()
-        # and raise error
-        raise Exception(err)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
