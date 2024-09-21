@@ -1,4 +1,4 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated
 from fastapi import Depends
 
 from .login import authenticate, validate_role
@@ -9,11 +9,11 @@ from .user import User
 @app.post("/account/edit/credentials/")
 def edit_credentials(
     user: Annotated[
-        User, Depends(validate_role(roles=["Customer"]))
+        User, Depends(validate_role(roles=["Manager"]))
         ],
-    userId: int
+    user_id: int,
+    new_credentials: str
 ):
-    print(f"TEST EDIT {userId}")
     pass
 
 if __name__ == '__main__':
