@@ -29,7 +29,6 @@ cursor = db.cursor()
 
 # NOTE: Annotated[str, Depends(oauth2_scheme)] is for swagger interface
 async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
-    ic(token)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -47,7 +46,7 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
         # Users can invalidate tokens by logging out (logout is not implemented as of 21 sep)
         cursor.execute(
             f'''
-                SELECT * FROM UserSessionTokens
+                SELECT userId FROM UserSessionTokens
                 WHERE token IS '{token}'
             '''
         )
@@ -55,6 +54,9 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
         row = cursor.fetchone()
 
         if row is None:
+            raise credentials_exception
+
+        if row[0] != user_id:
             raise credentials_exception
 
     except ExpiredSignatureError:
@@ -74,11 +76,9 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
 
 class validate_role:
     def __init__(self, roles):
-        ic(roles)
         self.roles = roles
 
     def __call__(self, user: Annotated[User, Depends(authenticate)]):
-        ic(user)
         if user.get_role() in self.roles:
             return True
 
@@ -87,37 +87,45 @@ class validate_role:
             detail="Insufficient permissions"
         )
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
 @app.get(path="/account/login")
-def login(userId: int, input: str) -> str:
+async def login(email: str, password: str) -> Token:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Incorrect email or password",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     # validate credentials
     # TODO: timing attack fix
-    if userId is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
+    if email is None or password is None:
+        raise credentials_exception
 
-    if not validate_credentials(userId, input):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
+    user_id = get_userid_from_email(email)
+
+    if user_id is None:
+        raise credentials_exception
+
+    if not validate_credentials(user_id, password):
+        raise credentials_exception
 
     try:
         cursor.execute(
             f'''
                 SELECT token FROM UserSessionTokens
-                WHERE userId IS {userId}
+                WHERE userId IS {user_id}
             '''
         )
         row = cursor.fetchone()
 
         if not row is None:
-            sessionToken = row[0]
+            session_token = row[0]
         else:
             # NOTE: Ignore _bcrypt.__about_ Error
-            sessionToken = jwt_encode({
-                "sub": userId,
+            session_token = jwt_encode({
+                "sub": user_id,
                 "exp": datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRATION_MINUTES),
             }, SECRET_KEY , USE_ALGORITHM)
 
@@ -126,46 +134,43 @@ def login(userId: int, input: str) -> str:
                     INSERT INTO UserSessionTokens(
                         userId, token
                     ) VALUES (
-                        {userId},
-                        '{sessionToken}'
+                        {user_id},
+                        '{session_token}'
                     )
                 '''
             )
             db.commit()
     except Exception as err:
-        sessionToken = None
+        session_token = None
         print(f"Unable to load userdata: {err}")
 
-    if not sessionToken:
+    if session_token is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error occurred"
         )
 
-    return sessionToken
+    ic(session_token)
+    return Token(access_token=session_token, token_type="bearer")
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
 # Login interface for swagger
 @app.post(path="/account/swagger-login")
 async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     # retrieve the userid
-    sessionToken = login(get_userid_from_email(form.username), form.password)
+    session_token = login(form.username, form.password)
 
-    if not sessionToken:
+    if not session_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    ic(sessionToken)
-
-    return Token(access_token=sessionToken, token_type="bearer")
+    return Token(access_token=session_token, token_type="bearer")
 
 def get_userid_from_email(email: str) -> int:
+    user_id = None
     try:
         cursor.execute(
             f'''
@@ -174,8 +179,8 @@ def get_userid_from_email(email: str) -> int:
                 FROM Userdata WHERE email IS '{email}'
             '''
         )
-        userId = cursor.fetchone()[0]
+        user_id = cursor.fetchone()[0]
     except Exception as err:
         pass
 
-    return userId
+    return user_id
