@@ -6,6 +6,7 @@ from roms import login, get_userid_from_email
 from roms import signup, create_account, UserInfo
 from roms import userPermissionRanks
 from roms import app
+from roms.user import get_user
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from typing import Annotated
@@ -54,22 +55,22 @@ def create_database_tables():
     cursor.execute(
         '''
             CREATE TABLE IF NOT EXISTS Userdata(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email NVARCHAR(50) NOT NULL,
-                firstName NVARCHAR(50) NOT NULL,
-                lastName NVARCHAR(50) NOT NULL,
+                first_name NVARCHAR(50) NOT NULL,
+                last_name NVARCHAR(50) NOT NULL,
                 birthday NVARCHAR(50) NOT NULL,
-                permissionLevel INTEGER
+                permission_level INTEGER
             )
         '''
     )
     cursor.execute(
         '''
             CREATE TABLE IF NOT EXISTS UserSessionTokens(
-                userId INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
                 token NVARCHAR(255) NOT NULL,
 
-                PRIMARY KEY (userId, token)
+                PRIMARY KEY (user_id, token)
             )
         '''
     )
@@ -77,7 +78,7 @@ def create_database_tables():
         '''
             CREATE TABLE IF NOT EXISTS Credentials(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
                 password NVARCHAR(50) NOT NULL
             )
         '''
@@ -88,7 +89,8 @@ if __name__ == '__main__':
     create_database_tables()
     db.commit()
     # Create management account
-    #test_signup_manager
+    #test_signup_manager()
     #test_signup()
     #test_login()
     test_viewall()
+    #get_user(1).get_birthday_object()

@@ -33,12 +33,12 @@ def create_userdata(data: UserInfo, userPermission: int):
     cursor.execute(
         f'''
             INSERT INTO Userdata(
-                id,
+                user_id,
                 email,
-                firstName,
-                lastName,
+                first_name,
+                last_name,
                 birthday,
-                permissionLevel
+                permission_level
                 ) VALUES (
                     NULL,
                     '{data.email}',
@@ -73,7 +73,7 @@ def create_account(data: UserInfo, permissionLevel):
 
 # NOTE: You cannot input permissionLevel from this api
 @app.post(path="/account/signup")
-def signup(data: UserInfo):
+async def signup(data: UserInfo):
     try:
         validate_user_data(data)
 

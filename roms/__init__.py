@@ -1,7 +1,7 @@
 from .signup import *
 from .login import *
 from .user import *
-
+from .database import *
 from .api import *
 
 from .manager import *

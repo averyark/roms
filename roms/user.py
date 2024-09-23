@@ -14,6 +14,7 @@ import sqlite3
 import threading
 from time import time
 
+from .database import UserData, get_user_data_in_dict
 from .validate import validate_user_data
 
 credentialsPath = "mock-database.db"
@@ -44,50 +45,13 @@ def get_user_class(userPermission: int):
     Logout is different from destruct!
     Logging out always trigger destruct but destruct doesn't mean the user is logout'd.
 """
-class User(BaseModel):
-    user_id: int
-    email: str
-    first_name: str
-    last_name: str
-    birthday: str
-    permissionLevel: int
-
+class User(UserData):
     def get_role(self):
         ic(self, self.permissionLevel)
         return get_user_class(self.permissionLevel)
-    
+
     def get_birthday_object(self):
        return pendulum.from_format(self.birthday, "YYYY-MM-DD")
 
 def get_user(user_id: int) -> User:
-    try:
-        cursor.execute(
-            f'''
-                SELECT
-                    id,
-                    firstName,
-                    lastName,
-                    email,
-                    birthday,
-                    permissionLevel
-                FROM Userdata WHERE id IS {user_id}
-            '''
-        )
-        row = cursor.fetchone()
-
-        userdata = row
-    except Exception as err:
-        userdata = None
-        print(f"Unable to load userdata {err}")
-
-    if not userdata:
-        raise RuntimeError("Unable to load userdata")
-
-    return User(
-        user_id=row[0],
-        first_name=row[1],
-        last_name=row[2],
-        email=row[3],
-        birthday=row[4],
-        permissionLevel=row[5],
-    )
+    return User(**get_user_data_in_dict(user_id))

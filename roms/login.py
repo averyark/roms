@@ -46,7 +46,7 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
         # Users can invalidate tokens by logging out (logout is not implemented as of 21 sep)
         cursor.execute(
             f'''
-                SELECT userId FROM UserSessionTokens
+                SELECT user_id FROM UserSessionTokens
                 WHERE token IS '{token}'
             '''
         )
@@ -115,7 +115,7 @@ async def login(email: str, password: str) -> Token:
         cursor.execute(
             f'''
                 SELECT token FROM UserSessionTokens
-                WHERE userId IS {user_id}
+                WHERE user_id IS {user_id}
             '''
         )
         row = cursor.fetchone()
@@ -132,7 +132,7 @@ async def login(email: str, password: str) -> Token:
             cursor.execute(
                 f'''
                     INSERT INTO UserSessionTokens(
-                        userId, token
+                        user_id, token
                     ) VALUES (
                         {user_id},
                         '{session_token}'
@@ -157,7 +157,7 @@ async def login(email: str, password: str) -> Token:
 # Login interface for swagger
 @app.post(path="/account/swagger-login")
 async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
-    # retrieve the userid
+    # retrieve the user_id
     session_token = login(form.username, form.password)
 
     if not session_token:
@@ -175,7 +175,7 @@ def get_userid_from_email(email: str) -> int:
         cursor.execute(
             f'''
                 SELECT
-                    id
+                    user_id
                 FROM Userdata WHERE email IS '{email}'
             '''
         )

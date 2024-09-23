@@ -27,9 +27,8 @@ def validate_credentials(user_id: int, input: str):
     cursor.execute(
         f'''
             SELECT DISTINCT
-                id,
                 password
-            FROM Credentials WHERE id IS '{user_id}'
+            FROM Credentials WHERE user_id IS '{user_id}'
         '''
     )
 
@@ -38,19 +37,39 @@ def validate_credentials(user_id: int, input: str):
     if not row:
         raise LookupError("User doesn't exist")
 
-    if pwd_context.verify(input, row[1]):
+    if pwd_context.verify(input, row[0]):
         return True
     else:
         return False
 
+def get_userid_from_email(email: str) -> int:
+    user_id = None
+    try:
+        cursor.execute(
+            f'''
+                SELECT
+                    user_id
+                FROM Userdata WHERE email IS '{email}'
+            '''
+        )
+        user_id = cursor.fetchone()[0]
+    except Exception as err:
+        pass
+
+    return user_id
+
 def set_credentials(email: str, password: str):
     hashed_password = pwd_context.hash(password)
+    user_id = get_userid_from_email(email)
+    if not user_id:
+        raise LookupError("invalid email")
+
     cursor.execute(
         f'''
             INSERT INTO Credentials(
-                id, email, password
+                id, user_id, password
             ) VALUES (
-                NULL, '{email}', '{hashed_password}'
+                NULL, '{user_id}', '{hashed_password}'
             )
         '''
     )
