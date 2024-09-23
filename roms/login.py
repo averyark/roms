@@ -91,7 +91,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-@app.get(path="/account/login")
+@app.get(path="/account/get_token")
 async def login(email: str, password: str) -> Token:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -153,9 +153,28 @@ async def login(email: str, password: str) -> Token:
     ic(session_token)
     return Token(access_token=session_token, token_type="bearer")
 
+@app.post(path="/account/expire_token")
+async def logout(user_id: int, token: str):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Unable to expire token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        user = get_user(user_id)
+    except:
+        raise credentials_exception
+
+    if not user.session_tokens.index(token):
+        raise credentials_exception
+
+    # commit after modifying
+    user.session_tokens.remove(token)
+    user.commit()
 
 # Login interface for swagger
-@app.post(path="/account/swagger-login")
+@app.post(path="/account/swagger_login")
 async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     # retrieve the user_id
     session_token = login(form.username, form.password)

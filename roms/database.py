@@ -28,6 +28,35 @@ class UserData(BaseModel):
     birthday: str
     permission_level: int
 
+    # Internal
+    _added_attr = {}
+    _deleted_attr = {}
+
+    def __setattr__(self, key, value):
+        self._added_attr[key] = value
+
+    def add_session_token(self, value):
+        self.session_tokens.insert(value)
+        self._added_attr["session_tokens"] = value
+
+    def remove_session_token(self, value):
+        try:
+            self.session_tokens.remove(value)
+        except:
+            pass
+
+        self._deleted_attr["session_tokens"] = value
+
+    def commit(self):
+        #for token in self.session_tokens:
+        #TODO
+        pass
+
+    def rollback(self):
+        self._added_attr.clear()
+        self._deleted_attr.clear()
+
+
 def get_user_data_in_dict(user_id: int):
 
     dict = {

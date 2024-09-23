@@ -7,6 +7,7 @@ from roms import signup, create_account, UserInfo
 from roms import userPermissionRanks
 from roms import app
 from roms.user import get_user
+from roms.database import UserData, get_user_data_in_dict
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from typing import Annotated
@@ -92,5 +93,11 @@ if __name__ == '__main__':
     #test_signup_manager()
     #test_signup()
     #test_login()
-    test_viewall()
+
+    #test_viewall()
     #get_user(1).get_birthday_object()
+
+    user_data = UserData(**get_user_data_in_dict(1))
+    user_data.session_tokens.append("abc")
+    print(user_data._added_attr)
+    user_data.rollback()
