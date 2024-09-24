@@ -3,8 +3,8 @@
 # @author: yandreZzz
 
 from typing import Annotated, Literal, Optional
-from fastapi import Depends
-from pydantic import BaseModel
+from fastapi import Depends, Path
+from pydantic import BaseModel, conint
 
 from .login import authenticate, validate_role
 from .api import app
@@ -66,15 +66,15 @@ def remove_cart(
     item_in_cart_id: int
 ):
     pass
-    
+
 @app.post("/cart/edit/update")
 def update_cart(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
     ],
     quantity,
-    remark: Optional[str],
-    item_in_cart_id: int
+    item_in_cart_id: int,
+    remark: Optional[str] = None,
 ):
     pass
 
@@ -90,8 +90,8 @@ def order_status(
 def review(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
-    ], 
-    ratings: int,
-    feedback: Optional[str]
+    ],
+    ratings: Annotated[int, Path(title="Rating between 1-5", ge=1, le=5)],
+    feedback: Optional[str] = None
 ):
     pass
