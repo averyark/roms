@@ -42,8 +42,7 @@ def get_user_class(userPermission: int):
     return None
 
 """
-    Logout is different from destruct!
-    Logging out always trigger destruct but destruct doesn't mean the user is logout'd.
+    Extra methods
 """
 class User(UserData):
     def get_role(self):

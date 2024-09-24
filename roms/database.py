@@ -28,34 +28,69 @@ class UserData(BaseModel):
     birthday: str
     permission_level: int
 
-    # Internal
-    _added_attr = {}
-    _deleted_attr = {}
-
-    def __setattr__(self, key, value):
-        self._added_attr[key] = value
-
-    def add_session_token(self, value):
-        self.session_tokens.insert(value)
-        self._added_attr["session_tokens"] = value
-
-    def remove_session_token(self, value):
-        try:
-            self.session_tokens.remove(value)
-        except:
-            pass
-
-        self._deleted_attr["session_tokens"] = value
-
     def commit(self):
-        #for token in self.session_tokens:
-        #TODO
-        pass
+        db_cursor.execute(
+            f'''
+                SELECT token FROM UserSessionTokens
+                WHERE user_id IS {self.user_id}
+            '''
+        )
 
-    def rollback(self):
-        self._added_attr.clear()
-        self._deleted_attr.clear()
+        in_db_session_tokens = db_cursor.fetchall()
 
+        #add
+        add_session_tokens = []
+        remove_session_tokens = []
+
+        for token in self.session_tokens:
+            try:
+                in_db_session_tokens.index(token)
+            except:
+                # if not exist in database
+                add_session_tokens.append((self.user_id, token))
+
+        for token in in_db_session_tokens:
+            try:
+                self.session_tokens.index(token)
+            except:
+                remove_session_tokens.append(token)
+
+        for token in add_session_tokens:
+            db_cursor.executemany(
+                '''
+                    INSERT INTO UserSessionTokens (user_id, token) VALUES (
+                        ?, ?
+                    )
+                ''', add_session_tokens
+            )
+
+        for token in remove_session_tokens:
+            db_cursor.executemany(
+                '''
+                    DELETE FROM UserSessionTokens WHERE token IS ?
+                ''',
+                remove_session_tokens
+            )
+
+        db_cursor.execute(
+            f'''
+                UPDATE Credentials
+                    SET password = '{self.hashed_password}'
+                WHERE user_id = {self.user_id}
+            '''
+        )
+
+        columns = [field for field in self.model_fields.keys() if field != 'user_id' and field != 'hashed_password' and field != 'session_tokens']
+        values = [getattr(self, field) for field in columns]
+
+        set_clause = ", ".join([f"{col} = ?" for col in columns])
+
+        query = f"UPDATE Userdata SET {set_clause} WHERE user_id = ?"
+
+        ic(query)
+
+        db_cursor.execute(query, values + [self.user_id])
+        db.commit()
 
 def get_user_data_in_dict(user_id: int):
 
