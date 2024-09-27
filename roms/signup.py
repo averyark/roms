@@ -72,7 +72,7 @@ def create_account(data: UserInfo, permissionLevel):
         raise err
 
 # NOTE: You cannot input permissionLevel from this api
-@app.post(path="/account/signup")
+@app.post(path="/account/signup", tags=["account"])
 async def signup(data: UserInfo):
     try:
         validate_user_data(data)

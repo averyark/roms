@@ -32,7 +32,7 @@ from .user import User
 '''
 
 # NOTE: authenticate is generally the same as validate_role, but without the option to specify expected roles
-@app.post("/account/edit/credentials/")
+@app.post("/account/edit/credentials/", tags=["account"])
 def edit_credentials(
     user: Annotated[
         User, Depends(validate_role(roles=["Manager"]))
@@ -42,5 +42,5 @@ def edit_credentials(
 ):
     user.hashed_password = pwd_context.hash(new_credentials)
     user.commit()
-    
+
     pass

@@ -2,7 +2,7 @@
 # @creation_date: 24/09/2024
 # @author: yandreZzz
 
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal, Optional, List
 from fastapi import Depends, Path
 from pydantic import BaseModel, conint
 
@@ -16,7 +16,7 @@ if __name__ == '__main__':
 category = Literal["All", "Beverage", "Rice", "Noodle", "Snacks"]
 order_status = Literal["Preparing", "Ready to Serve", "Served"]
 
-@app.post("/account/edit/personal_information/")
+@app.post("/account/edit/personal_information/", tags=["account"])
 def update_information(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
@@ -24,11 +24,11 @@ def update_information(
     first_name: str,
     last_name: str,
     birthday: str,
-    email:str
+    email: str
 ):
     pass
 
-class ProductQueryResults(BaseModel):
+class Item(BaseModel):
     item_id: int
     price: float
     name: str
@@ -36,17 +36,14 @@ class ProductQueryResults(BaseModel):
     description: str
     category: category
 
-@app.get("/products")
+@app.get("/products", tags=["product"])
 def get_products(
-    user: Annotated[
-        User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
-    ],
     category: category
-) -> ProductQueryResults:
+) -> List[Item]:
     pass
 #print for all
 
-@app.post("/cart/edit/add")
+@app.post("/cart/edit/add", tags=["cart"])
 def add_cart(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
@@ -57,7 +54,7 @@ def add_cart(
 ) -> int:
     pass
 
-@app.post("/cart/edit/remove")
+@app.post("/cart/edit/remove" , tags=["cart"])
 def remove_cart(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
@@ -67,7 +64,7 @@ def remove_cart(
 ):
     pass
 
-@app.post("/cart/edit/update")
+@app.post("/cart/edit/update", tags=["cart"])
 def update_cart(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
@@ -78,7 +75,7 @@ def update_cart(
 ):
     pass
 
-@app.get("order/track")
+@app.get("order/track", tags=["order"])
 def order_status(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
@@ -86,12 +83,12 @@ def order_status(
 )-> order_status:
     pass
 
-@app.post("review/add")
+@app.post("review/add", tags=["review"])
 def review(
     user: Annotated[
         User, Depends(validate_role(roles=["Customer","Manager","Chef","Cashier"]))
     ],
     ratings: Annotated[int, Path(title="Rating between 1-5", ge=1, le=5)],
-    feedback: Optional[str] = None
+    feedback: str = None
 ):
     pass

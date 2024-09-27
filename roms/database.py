@@ -11,6 +11,8 @@ db_path = "mock-database.db"
 db = sqlite3.connect(db_path)
 db_cursor = db.cursor()
 
+# TODO: Switch to SQLAlchemy
+
 class UserData(BaseModel):
     # Shared
     user_id: int
