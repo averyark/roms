@@ -10,7 +10,7 @@ from icecream import ic
 import sqlite3
 from datetime import datetime, timezone, timedelta
 
-from .credentials import validate_credentials, SECRET_KEY, USE_ALGORITHM, JWT_EXPIRATION_MINUTES
+from .credentials import validate_credentials, SECRET_KEY, USE_ALGORITHM, JWT_EXPIRATION_MINUTES, pwd_context
 from .user import get_user, User
 from .api import app
 
@@ -172,6 +172,20 @@ async def logout(user: Annotated[User, Depends(authenticate)], token: str):
     # commit after modifying
     user.session_tokens.remove(token)
     user.commit()
+
+@app.post("/account/edit/credentials/", tags=["account"])
+def edit_credentials(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ],
+    user_id: int,
+    new_credentials: str
+):
+    try:
+        edited_user = get_user(user_id)
+        edited_user.hashed_password = pwd_context.hash(new_credentials)
+        edited_user.commit()
+    except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 # Login interface for swagger
 @app.post(path="/account/swagger_login", tags=["account"])

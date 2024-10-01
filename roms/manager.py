@@ -7,7 +7,7 @@ from fastapi import Depends
 from pydantic import BaseModel
 
 from .credentials import pwd_context
-from .login import authenticate, validate_role
+from .account import authenticate, validate_role
 from .api import app
 from .user import User
 
@@ -32,15 +32,3 @@ from .user import User
 '''
 
 # NOTE: authenticate is generally the same as validate_role, but without the option to specify expected roles
-@app.post("/account/edit/credentials/", tags=["account"])
-def edit_credentials(
-    user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
-    ],
-    user_id: int,
-    new_credentials: str
-):
-    user.hashed_password = pwd_context.hash(new_credentials)
-    user.commit()
-
-    pass

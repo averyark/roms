@@ -6,7 +6,7 @@ from typing import Annotated, Literal, Optional, List
 from fastapi import Depends, Path
 from pydantic import BaseModel, conint
 
-from .login import authenticate, validate_role
+from .account import authenticate, validate_role
 from .api import app
 from .user import User
 
@@ -28,6 +28,7 @@ def update_information(
 ):
     pass
 
+# TODO: import from inventory
 class Item(BaseModel):
     item_id: int
     price: float
