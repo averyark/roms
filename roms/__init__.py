@@ -1,4 +1,3 @@
-from .signup import *
 from .account import *
 from .user import *
 from .database import *
@@ -9,6 +8,7 @@ from .manager import *
 from .chef import *
 from .cashier import *
 from .customer import *
+#! End of Deprecated
 
 # Components
 from .account import *

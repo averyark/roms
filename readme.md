@@ -2,9 +2,11 @@
 
 ### Manager
 1. System Administration: Manage user accounts and credentials.
+    - APIs: `/account/add`, `/credentials`
 2. Order Management: Oversee order details, including viewing and updating order status.
 3. Financial Management: Track income, expenses, and profitability.
 4. Inventory Control: Maintain product inventory by adding, updating, or removing items (product and ingredients) from the system.
+   - APIs: `/inventory/ingredients/add`, `/inventory/ingredients/delete`, `/inventory/ingredients/update`, `/items/add`, `/inventory/items/delete` and `/inventory/items/update`
 5. Customer Feedback: Monitor and review customer feedback to improve services.
 
 ### Customer

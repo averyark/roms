@@ -21,6 +21,8 @@ from fastapi.security.oauth2 import OAuth2PasswordBearer, OAuth2PasswordRequestF
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="account/swagger-login")
 
+from .user import User, validate_user_data
+from .credentials import set_credentials
 from typing import Annotated
 
 credentialsPath = "mock-database.db"
@@ -86,6 +88,13 @@ class validate_role:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Insufficient permissions"
         )
+
+class UserInfo(BaseModel):
+    birthday: str
+    first_name: str
+    last_name: str
+    email: str
+    password: str
 
 class Token(BaseModel):
     access_token: str
@@ -153,7 +162,7 @@ async def login(email: str, password: str) -> Token:
     ic(session_token)
     return Token(access_token=session_token, token_type="bearer")
 
-@app.post(path="/account/expire_token", tags=["account"])
+@app.delete(path="/account/expire_token", tags=["account"])
 async def logout(user: Annotated[User, Depends(authenticate)], token: str):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -173,20 +182,6 @@ async def logout(user: Annotated[User, Depends(authenticate)], token: str):
     user.session_tokens.remove(token)
     user.commit()
 
-@app.post("/account/edit/credentials/", tags=["account"])
-def edit_credentials(
-    user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
-    ],
-    user_id: int,
-    new_credentials: str
-):
-    try:
-        edited_user = get_user(user_id)
-        edited_user.hashed_password = pwd_context.hash(new_credentials)
-        edited_user.commit()
-    except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
 # Login interface for swagger
 @app.post(path="/account/swagger_login", tags=["account"])
 async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
@@ -201,6 +196,60 @@ async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -
         )
 
     return Token(access_token=session_token, token_type="bearer")
+
+def create_userdata(data: UserInfo, userPermission: int):
+    cursor.execute(
+        f'''
+            INSERT INTO Userdata(
+                user_id,
+                email,
+                first_name,
+                last_name,
+                birthday,
+                permission_level
+                ) VALUES (
+                    NULL,
+                    '{data.email}',
+                    '{data.first_name}',
+                    '{data.last_name}',
+                    '{data.birthday}',
+                    {userPermission or "10"}
+                )
+        '''
+    )
+    db.commit()
+
+# NOTE: You cannot input permissionLevel from this api
+@app.post(path="/account/signup", tags=["account"])
+async def signup(data: UserInfo):
+    try:
+        validate_user_data(data)
+
+        cursor.execute(
+            f'''
+                SELECT DISTINCT * FROM Userdata WHERE email IS '{data.email}'
+            '''
+        )
+        row = cursor.fetchone()
+
+        if row:
+            raise LookupError("This email already exist in the database")
+
+        try:
+            create_userdata(data, 10)
+            set_credentials(data.email, data.password)
+        except Exception as err:
+            raise err
+    except LookupError as err:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=err
+        )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=err
+        )
 
 def get_userid_from_email(email: str) -> int:
     user_id = None
@@ -217,3 +266,38 @@ def get_userid_from_email(email: str) -> int:
         pass
 
     return user_id
+
+# NOTE: This is used to create account with different permissionLevel, it is inaccessible at customer level. Requries authentication.
+@app.post("/account/add/", tags=["account"])
+def create_account(user: Annotated[User, Depends(validate_role(roles=["Manager"]))], data: UserInfo, permissionLevel):
+    validate_user_data(data)
+
+    cursor.execute(
+        f'''
+            SELECT DISTINCT * FROM Userdata WHERE email IS '{data.email}'
+        '''
+    )
+    row = cursor.fetchone()
+
+    if row:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already exist")
+
+    try:
+        create_userdata(data, permissionLevel)
+        set_credentials(data.email, data.password)
+    except Exception as err:
+        raise err
+
+@app.patch("/account/edit/credentials/", tags=["account"])
+def edit_credentials(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ],
+    user_id: int,
+    new_credentials: str
+):
+    try:
+        edited_user = get_user(user_id)
+        edited_user.hashed_password = pwd_context.hash(new_credentials)
+        edited_user.commit()
+    except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
