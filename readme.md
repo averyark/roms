@@ -1,8 +1,24 @@
 ## Restaurant Ordering Management Systems
 
+APIs accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
+
+Sample Accounts:
+```
+role: Customer
+email: customer1@gmail.com
+password: somepass12
+```
+```
+role: Manager
+email: manager@groms.com
+password: manager%password122
+```
+
+
+
 ### Manager
 1. System Administration: Manage user accounts and credentials.
-    - APIs: `/account/add`, `/credentials`
+    - APIs: `/account/add/`, `/account/edit/credentials/`, `/account/edit/user_info/`, `/account/edit/delete/`
 2. Order Management: Oversee order details, including viewing and updating order status.
 3. Financial Management: Track income, expenses, and profitability.
 4. Inventory Control: Maintain product inventory by adding, updating, or removing items (product and ingredients) from the system.

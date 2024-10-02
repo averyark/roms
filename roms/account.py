@@ -19,11 +19,11 @@ from pydantic import BaseModel
 from fastapi import HTTPException, status, Depends
 from fastapi.security.oauth2 import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="account/swagger-login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/account/swagger_login")
 
 from .user import User, validate_user_data
 from .credentials import set_credentials
-from typing import Annotated
+from typing import Annotated, Optional
 
 credentialsPath = "mock-database.db"
 db = sqlite3.connect(credentialsPath)
@@ -82,7 +82,7 @@ class validate_role:
 
     def __call__(self, user: Annotated[User, Depends(authenticate)]):
         if user.get_role() in self.roles:
-            return True
+            return user
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -95,6 +95,12 @@ class UserInfo(BaseModel):
     last_name: str
     email: str
     password: str
+
+class UserInfoUpdate(BaseModel):
+    birthday: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
@@ -159,7 +165,6 @@ async def login(email: str, password: str) -> Token:
             detail="Error occurred"
         )
 
-    ic(session_token)
     return Token(access_token=session_token, token_type="bearer")
 
 @app.delete(path="/account/expire_token", tags=["account"])
@@ -186,16 +191,16 @@ async def logout(user: Annotated[User, Depends(authenticate)], token: str):
 @app.post(path="/account/swagger_login", tags=["account"])
 async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     # retrieve the user_id
-    session_token = login(form.username, form.password)
+    token = await login(form.username, form.password)
 
-    if not session_token:
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    return Token(access_token=session_token, token_type="bearer")
+    return token
 
 def create_userdata(data: UserInfo, userPermission: int):
     cursor.execute(
@@ -300,4 +305,28 @@ def edit_credentials(
         edited_user = get_user(user_id)
         edited_user.hashed_password = pwd_context.hash(new_credentials)
         edited_user.commit()
+    except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+@app.delete("/account/edit/delete/", tags=["account"])
+def edit_credentials(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ],
+    user_id: int,
+):
+    try:
+
+        pass
+    except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+@app.patch("/account/edit/user_info", tags=["account"])
+def edit_credentials(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ],
+    user_id: int,
+    update_fields: UserInfoUpdate
+):
+    try:
+        pass
     except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

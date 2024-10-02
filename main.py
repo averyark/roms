@@ -5,7 +5,12 @@
 from roms import login, get_userid_from_email
 from roms import signup, create_account, UserInfo
 
+from roms.account import swagger_login, login, logout
+from roms import userPermissionRanks
 from roms import app
+from roms.user import get_user
+from roms.database import UserData, get_user_data_in_dict
+from roms.credentials import pwd_context
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from typing import Annotated
