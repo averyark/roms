@@ -272,9 +272,7 @@ def get_userid_from_email(email: str) -> int:
 
     return user_id
 
-# NOTE: This is used to create account with different permissionLevel, it is inaccessible at customer level. Requries authentication.
-@app.post("/account/add/", tags=["account"])
-def create_account(user: Annotated[User, Depends(validate_role(roles=["Manager"]))], data: UserInfo, permissionLevel):
+def create_account(data: UserInfo, permissionLevel: int):
     validate_user_data(data)
 
     cursor.execute(
@@ -293,6 +291,11 @@ def create_account(user: Annotated[User, Depends(validate_role(roles=["Manager"]
     except Exception as err:
         raise err
 
+# NOTE: This is used to create account with different permissionLevel, it is inaccessible at customer level. Requries authentication.
+@app.post("/account/add/", tags=["account"])
+async def create_account_async(user: Annotated[User, Depends(validate_role(roles=["Manager"]))], data: UserInfo, permissionLevel: int):
+    create_account(data, permissionLevel)
+
 @app.patch("/account/edit/credentials/", tags=["account"])
 def edit_credentials(
     user: Annotated[
@@ -308,7 +311,7 @@ def edit_credentials(
     except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 @app.delete("/account/edit/delete/", tags=["account"])
-def edit_credentials(
+def delete_account(
     user: Annotated[
         User, Depends(validate_role(roles=["Manager"]))
     ],
@@ -320,7 +323,7 @@ def edit_credentials(
     except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 @app.patch("/account/edit/user_info", tags=["account"])
-def edit_credentials(
+def update_user_info(
     user: Annotated[
         User, Depends(validate_role(roles=["Manager"]))
     ],

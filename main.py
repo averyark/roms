@@ -3,7 +3,7 @@
 # @authors: averyark
 
 from roms import login, get_userid_from_email
-from roms import signup, create_account, UserInfo
+from roms import signup, create_account, UserInfo, edit_credentials
 
 from roms.account import swagger_login, login, logout
 from roms import userPermissionRanks
@@ -35,13 +35,13 @@ def test_viewall():
         ic(row)
 
 def test_signup():
-    signup(data=UserInfo(
+    create_account(data=UserInfo(
         email="customer1@gmail.com",
         birthday="2005-09-21",
         password="somepass12",
         first_name="alan",
         last_name="beth"
-    ))
+    ), permissionLevel=10)
 
 def test_signup_manager():
     create_account(data=UserInfo(
@@ -90,9 +90,11 @@ def create_database_tables():
     db.commit()
 
 if __name__ == '__main__':
+
     create_database_tables()
     db.commit()
     # Create management account
+    
     #test_signup_manager()
     #test_signup()
     #test_login()

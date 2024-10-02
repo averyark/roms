@@ -1,5 +1,6 @@
 ## Restaurant Ordering Management Systems
 
+
 APIs accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
 
 Sample Accounts:
@@ -10,11 +11,9 @@ password: somepass12
 ```
 ```
 role: Manager
-email: manager@groms.com
+email: manager@roms.com
 password: manager%password122
 ```
-
-
 
 ### Manager
 1. System Administration: Manage user accounts and credentials.

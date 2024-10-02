@@ -14,6 +14,7 @@ class InventoryIngredient(BaseModel):
     ingredient_id: int
     name: str
     quantity: float
+    unit: str
 
 class InventoryItemIngredient(BaseModel):
     ingredient_id: int
@@ -41,7 +42,13 @@ class InventoryItemUpdate(BaseModel):
 TEMPORARY_INGREDIENTS = [InventoryIngredient(
     name="Kopi Powder",
     ingredient_id=1,
-    quantity=1252 #gram
+    quantity=1252,
+    unit="g",
+), InventoryIngredient(
+    name="Hot Water",
+    ingredient_id=2,
+    quantity=float("inf"),
+    unit="ml"
 )]
 
 TEMPORARY_INVENTORY = [InventoryItem(
@@ -52,12 +59,25 @@ TEMPORARY_INVENTORY = [InventoryItem(
     description="yummy kopi mmmm",
     category="Beverage",
     ingredients=[
-        InventoryItemIngredient(ingredient_id=1, quantity=9)
+        # Kopi Powder
+        InventoryItemIngredient(ingredient_id=1, quantity=10),
+        # Water
+        InventoryItemIngredient(ingredient_id=2, quantity=200)
+    ]
+), InventoryItem(
+    item_id=2,
+    price=12,
+    name="Super Fried Rice",
+    picture_link="https://www.gimmesomeoven.com/wp-content/uploads/2017/07/How-To-Make-Fried-Rice-Recipe-2-1.jpg",
+    description="better than uncle roger fried rice",
+    category="Rice",
+    ingredients=[
+        
     ]
 )]
 
 @app.post("/inventory/items/get", tags=["inventory"])
-def inventory_add(
+def inventory_get(
     user: Annotated[
         User, Depends(validate_role(roles=["Manager", "Chef", "Cashier", "Customer"]))
     ],
@@ -74,16 +94,17 @@ def inventory_add(
 
         return copy
 
-@app.post("/inventory/add", tags=["inventory"])
-def inventory_add(
+@app.post("/inventory/items/add", tags=["inventory"])
+def inventory_add_item(
     user: Annotated[
         User, Depends(validate_role(roles=["Manager"]))
     ],
+    fields: InventoryItemIngredient
 ):
     pass
 
-@app.patch("/inventory/update", tags=["inventory"])
-def inventory_update(
+@app.patch("/inventory/items/update", tags=["inventory"])
+def inventory_update_item(
     user: Annotated[
         User, Depends(validate_role(roles=["Manager"]))
     ],
@@ -92,10 +113,39 @@ def inventory_update(
 ):
     pass
 
-@app.delete("/inventory/delete", tags=["inventory"])
-def inventory_delete(
+@app.delete("/inventory/items/delete", tags=["inventory"])
+def inventory_delete_item(
     user: Annotated[
         User, Depends(validate_role(roles=["Manager"]))
     ],
+    ingredient_id: int
+):
+    pass
+
+@app.post("/inventory/ingredients/add", tags=["inventory"])
+def inventory_add_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ],
+    fields: InventoryIngredient
+):
+    pass
+
+@app.patch("/inventory/ingredients/update", tags=["inventory"])
+def inventory_update_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ],
+    ingredient_id: int,
+    update_fields: InventoryItemUpdate
+):
+    pass
+
+@app.delete("/inventory/ingredients/delete", tags=["inventory"])
+def inventory_delete_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ],
+    ingredient_id: int
 ):
     pass
