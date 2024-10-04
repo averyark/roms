@@ -60,7 +60,7 @@ def create_database_tables():
         '''
             CREATE TABLE IF NOT EXISTS Userdata(
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email NVARCHAR(50) NOT NULL,
+                email NVARCHAR(50) NOT NULL UNQIUE,
                 first_name NVARCHAR(50) NOT NULL,
                 last_name NVARCHAR(50) NOT NULL,
                 birthday NVARCHAR(50) NOT NULL,
@@ -94,10 +94,15 @@ if __name__ == '__main__':
     create_database_tables()
     db.commit()
     # Create management account
-    
+
     #test_signup_manager()
     #test_signup()
     #test_login()
 
-    #test_viewall()
+    dat = get_user(get_userid_from_email("manager@roms.com"))
+    dat.first_name = "sabii"
+    dat.commit()
+
+
+    test_viewall()
     #get_user(1).get_birthday_object()

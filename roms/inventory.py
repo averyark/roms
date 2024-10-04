@@ -72,7 +72,7 @@ TEMPORARY_INVENTORY = [InventoryItem(
     description="better than uncle roger fried rice",
     category="Rice",
     ingredients=[
-        
+
     ]
 )]
 

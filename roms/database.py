@@ -34,44 +34,42 @@ class UserData(BaseModel):
         db_cursor.execute(
             f'''
                 SELECT token FROM UserSessionTokens
-                WHERE user_id IS {self.user_id}
-            '''
+                WHERE user_id = ?
+            ''', (self.user_id,)
         )
 
-        in_db_session_tokens = db_cursor.fetchall()
+        in_db_session_tokens = [row[0] for row in db_cursor.fetchall()]
 
-        #add
+        # Prepare lists for tokens to add and remove
         add_session_tokens = []
         remove_session_tokens = []
 
+        # Identify tokens to add
         for token in self.session_tokens:
-            try:
-                in_db_session_tokens.index(token)
-            except:
-                # if not exist in database
+            if token not in in_db_session_tokens:
                 add_session_tokens.append((self.user_id, token))
 
+        # Identify tokens to remove
         for token in in_db_session_tokens:
-            try:
-                self.session_tokens.index(token)
-            except:
-                remove_session_tokens.append(token)
+            if token not in self.session_tokens:
+                remove_session_tokens.append((self.user_id, token))
 
-        for token in add_session_tokens:
+        # Insert new tokens
+        if add_session_tokens:
             db_cursor.executemany(
                 '''
-                    INSERT INTO UserSessionTokens (user_id, token) VALUES (
-                        ?, ?
-                    )
+                INSERT INTO UserSessionTokens (user_id, token)
+                VALUES (?, ?)
                 ''', add_session_tokens
             )
 
-        for token in remove_session_tokens:
+        # Remove old tokens
+        if remove_session_tokens:
             db_cursor.executemany(
                 '''
-                    DELETE FROM UserSessionTokens WHERE token IS ?
-                ''',
-                remove_session_tokens
+                DELETE FROM UserSessionTokens
+                WHERE user_id = ? AND token = ?
+                ''', remove_session_tokens
             )
 
         db_cursor.execute(
