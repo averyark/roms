@@ -4,19 +4,21 @@
 > [!WARNING]
 ROMS is not compatible with python 3.12 or higher. Tests are conducted only in python 3.10 and 3.11
 
-Make sure you have python environment installed. You can find out by looking for the venv folder in the root folder. If you don't see it, run the following:
+Make sure you have python environment installed. Run the following if it is not installed in your directory.
 
 Windows:
-```
-python venv venv
+```bash
+pip install virtualenv
+virtualenv -p python3.11 venv
 venv\scripts\activate.bat
 pip install -r requirements.txt
 ```
 
 MacOs or Linux:
-```
-python venv venv
-venv\bin\activate
+```shell
+pip install virtualenv
+virtualenv -p python3.11 venv
+venv/bin/activate
 pip install -r requirements.txt
 ```
 
