@@ -4,7 +4,7 @@
 
 ### How to use
 > [!WARNING]
-ROMS is not compatible with python 3.12 or higher. Tests are conducted only in python 3.10 and 3.11
+ROMS is only compatible with 3.10 and 3.11
 
 Make sure you have python environment installed. Run the following if it is not installed in your directory.
 
@@ -24,15 +24,12 @@ venv/bin/activate
 pip install -r requirements.txt
 ```
 
-You may need to install the python 3.11 intepreter:\
+Install the python 3.11 intepreter if you don't have python 311:\
 Windows: Run in Shell
 ```shell
 Invoke-WebRequest -UseBasicParsing -Uri "https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe" -OutFile "Downloads\python-3.11.0-amd64.exe"
-
 Start-Process -FilePath "Downloads\python-3.11.0-amd64.exe" -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0", "Include_pip=1 " -NoNewWindow -Wait
-
 setx path "%path%;C:\Program Files\Python311"
-
 del "Downloads\python-3.11.0-amd64.exe"
 ```
 
@@ -59,7 +56,15 @@ Manager|manager@roms.com|manager%password122
 
 ### API Documentations
 
+> [!CAUTION]
+> The current SECRET_KEY is exposed. Replace the SECRET_KEY in `/roms/credentials` with your own key. You can generate your own SECRET_KEY using by running `openssl rand -hex 32` in terminal.
+
 ### Account
+Goal|API
+-|-
+Login / GetToken | [account/get_token](http://127.0.0.1:8000/docs#/account/login_account_get_token_get)
+Logout / ExpireToken | [account/expire_token](http://127.0.0.1:8000/docs#/account/logout_account_expire_token_delete)
+Signup | [account/signup](http://127.0.0.1:8000/docs#/account/signup_account_signup_post)
 
 
 
