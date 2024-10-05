@@ -1,6 +1,9 @@
 ## Restaurant Ordering Management Systems
 
 ![Python 3.11, 3.10](https://github.com/averyark/roms/actions/workflows/python-package.yml/badge.svg)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/t/averyark/roms)
+
 
 ### How to use
 > [!WARNING]
@@ -57,7 +60,7 @@ Manager|manager@roms.com|manager%password122
 ### API Documentations
 
 > [!CAUTION]
-> The current SECRET_KEY is exposed. Replace the SECRET_KEY in `/roms/credentials` with your own key. You can generate your own SECRET_KEY using by running `openssl rand -hex 32` in terminal.
+> The current SECRET_KEY is exposed, so it is not recommended that any real passwords are used for testing. Replace the SECRET_KEY in `/roms/credentials` with your own key if you're using it for prod. You can generate your own SECRET_KEY using by running `openssl rand -hex 32` in terminal.
 
 ### Account
 Goal|API
