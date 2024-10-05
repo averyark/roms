@@ -1,5 +1,7 @@
 ## Restaurant Ordering Management Systems
 
+![Python 3.11, 3.10](https://github.com/averyark/roms/actions/workflows/python-package.yml/badge.svg)
+
 ### How to use
 > [!WARNING]
 ROMS is not compatible with python 3.12 or higher. Tests are conducted only in python 3.10 and 3.11
@@ -22,21 +24,44 @@ venv/bin/activate
 pip install -r requirements.txt
 ```
 
-APIs accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
+You may need to install the python 3.11 intepreter:\
+Windows: Run in Shell
+```shell
+Invoke-WebRequest -UseBasicParsing -Uri "https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe" -OutFile "Downloads\python-3.11.0-amd64.exe"
 
-Sample Accounts:
+Start-Process -FilePath "Downloads\python-3.11.0-amd64.exe" -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0", "Include_pip=1 " -NoNewWindow -Wait
+
+setx path "%path%;C:\Program Files\Python311"
+
+del "Downloads\python-3.11.0-amd64.exe"
 ```
-role: Customer
-email: customer1@gmail.com
-password: somepass12
+
+Run FastAPI to use apis locally:
 ```
+FastAPI dev main.py
 ```
-role: Manager
-email: manager@roms.com
-password: manager%password122
-```
+
+APIs are accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
+
+> [!IMPORTANT]
+Some apis require authentication, so you have to login to use them. Below are some account you can use.
+
+Alternatively, you can create your own account
+
+Role|Email|Password
+-|-|-
+Customer|customer1@gmail.com|somepass1
+Manager|manager@roms.com|manager%password122
+
+> More in [Account](#Account)
+
+***
 
 ### API Documentations
+
+### Account
+
+
 
 #### Manager
 1. System Administration: Manage user accounts and credentials.
