@@ -7,7 +7,6 @@ from .credentials import SECRET_KEY, USE_ALGORITHM, pwd_context
 from .api import app
 from .database import session, create_session_token, create_user, UserModel, UserCreate
 from .user import get_user, User
-from .validate import validate_user_data
 from asyncio import run_coroutine_threadsafe
 
 from jwt import encode as jwt_encode, decode as jwt_decode, ExpiredSignatureError
@@ -15,7 +14,7 @@ from pydantic import BaseModel
 from fastapi import HTTPException, status, Depends
 from fastapi.security.oauth2 import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/account/swagger_login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/account/swagger_login')
 
 from typing import Annotated, Optional
 
@@ -23,14 +22,14 @@ from typing import Annotated, Optional
 async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
+        detail='Could not validate credentials',
+        headers={'WWW-Authenticate': 'Bearer'},
     )
 
     try:
         # NOTE: Ignore _bcrypt.__about_ Error
         payload = jwt_decode(token, SECRET_KEY, algorithms=[USE_ALGORITHM])
-        user_id = payload.get("sub")
+        user_id = payload.get('sub')
         if user_id is None:
             raise credentials_exception
 
@@ -63,7 +62,7 @@ class validate_role:
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Insufficient permissions"
+            detail='Insufficient permissions'
         )
 
 class UserInfoUpdate(BaseModel):
@@ -76,12 +75,12 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-@app.get(path="/account/get_token", tags=["account"])
+@app.get(path='/account/get_token', tags=['account'])
 async def login(email: str, password: str) -> Token:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect email or password",
-        headers={"WWW-Authenticate": "Bearer"},
+        detail='Incorrect email or password',
+        headers={'WWW-Authenticate': 'Bearer'},
     )
     # validate credentials
     # TODO: timing attack fix
@@ -104,7 +103,7 @@ async def login(email: str, password: str) -> Token:
         # NOTE: Ignore _bcrypt.__about_ Error
     except Exception as err:
         session_token = None
-        print(f"Unable to load userdata: {err}")
+        print(f'Unable to load userdata: {err}')
 
     # Check for expired tokens by trying to authenticate, do cleanup.
     for token in user.session_tokens:
@@ -115,17 +114,17 @@ async def login(email: str, password: str) -> Token:
     if session_token is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error occurred"
+            detail='Error occurred'
         )
 
-    return Token(access_token=session_token, token_type="bearer")
+    return Token(access_token=session_token, token_type='bearer')
 
-@app.delete(path="/account/expire_token", tags=["account"])
+@app.delete(path='/account/expire_token', tags=['account'])
 async def logout(user: Annotated[User, Depends(authenticate)], token: str):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Unable to expire token",
-        headers={"WWW-Authenticate": "Bearer"},
+        detail='Unable to expire token',
+        headers={'WWW-Authenticate': 'Bearer'},
     )
 
     try:
@@ -141,7 +140,7 @@ async def logout(user: Annotated[User, Depends(authenticate)], token: str):
     user.commit()
 
 # Login interface for swagger
-@app.post(path="/account/swagger_login", tags=["account"])
+@app.post(path='/account/swagger_login', tags=['account'])
 async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     # retrieve the user_id
     token = await login(form.username, form.password)
@@ -149,40 +148,29 @@ async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Bearer"}
+            detail='Invalid credentials',
+            headers={'WWW-Authenticate': 'Bearer'}
         )
 
     return token
 
 # NOTE: You cannot input permissionLevel from this api
-@app.post(path="/account/signup", tags=["account"])
+@app.post(path='/account/signup', tags=['account'])
 async def signup(data: UserCreate):
-    try:
-        # redundant, already checked by pydantic but just putting it here for now
-        validate_user_data(data)
+    # redundant, already checked by pydantic but just putting it here for now
+    #validate_user_data(data)
 
-        user = session.query(UserModel).filter(UserModel.email == data.email).one_or_none()
+    user = session.query(UserModel).filter(UserModel.email == data.email).one_or_none()
 
-        if user:
-            raise LookupError("This email already exist in the database")
-
-        try:
-            # Overwrite permission_level
-            data.permission_level = 10
-            create_user(data)
-        except Exception as err:
-            raise err
-    except LookupError as err:
+    if user:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=err
+            detail='This email already exists in the database'
         )
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=err
-        )
+
+    # Overwrite permission_level
+    data.permission_level = 10
+    create_user(data)
 
 def get_userid_from_email(email: str) -> int:
     user_id = None
@@ -196,24 +184,22 @@ def get_userid_from_email(email: str) -> int:
 
 def create_account(data: UserCreate):
     # redundant, already checked by pydantic but just putting it here for now
-    validate_user_data(data)
-
     user = session.query(UserModel).filter(UserModel.email == data.email).one_or_none()
 
     if user:
-        raise LookupError("This email already exist in the database")
+        raise LookupError('This email already exist in the database')
 
     create_user(data)
 
 # NOTE: This is used to create account with different permissionLevel, it is inaccessible at customer level. Requries authentication.
-@app.post("/account/add/", tags=["account"])
-async def create_account_async(user: Annotated[User, Depends(validate_role(roles=["Manager"]))], data: UserCreate):
+@app.post('/account/add/', tags=['account'])
+async def create_account_async(user: Annotated[User, Depends(validate_role(roles=['Manager']))], data: UserCreate):
     create_account(data)
 
-@app.patch("/account/edit/credentials/", tags=["account"])
+@app.patch('/account/edit/credentials/', tags=['account'])
 def edit_credentials(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     user_id: int,
     new_credentials: str
@@ -224,10 +210,10 @@ def edit_credentials(
         edited_user.commit()
     except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-@app.delete("/account/edit/delete/", tags=["account"])
+@app.delete('/account/edit/delete/', tags=['account'])
 def delete_account(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     user_id: int,
 ):
@@ -236,7 +222,7 @@ def delete_account(
         pass
     except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-@app.patch("/account/edit/user_info", tags=["account"])
+@app.patch('/account/edit/user_info', tags=['account'])
 def update_user_info(
     user: Annotated[
         User, Depends(authenticate)
@@ -246,7 +232,7 @@ def update_user_info(
 ):
     target_user = user
     if not user_id is None:
-        if not user.get_role() in ["Manager"]:
+        if not user.get_role() in ['Manager']:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
         else:
             target_user = get_user(user_id)

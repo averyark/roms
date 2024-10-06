@@ -26,19 +26,19 @@ def get_user_class(userPermission: int):
 
     return None
 
-"""
+'''
     Extra User Methods
-"""
+'''
 class User(UserData):
     def get_role(self):
         return get_user_class(self.permission_level)
 
     def get_birthday_object(self):
-       return pendulum.from_format(self.birthday, "YYYY-MM-DD")
+       return pendulum.from_format(self.birthday, 'YYYY-MM-DD')
 
 def get_user(user_id: int) -> User:
     user_data = get_user_data_in_dict(user_id)
     if not user_data:
-        raise LookupError("Attempted to get user that does not exist in the database")
+        raise LookupError('Attempted to get user that does not exist in the database')
 
     return User(**user_data)

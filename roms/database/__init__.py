@@ -35,14 +35,14 @@ def get_user_data_in_dict(user_id: int) -> dict:
     try:
         user = session.query(UserModel).filter(UserModel.user_id == user_id).one()
         return {
-            "user_id": user_id,
-            "session_tokens": [token.token for token in user.session_tokens],
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "birthday": user.birthday,
-            "permission_level": user.permission_level,
-            "hashed_password": user.hashed_password
+            'user_id': user_id,
+            'session_tokens': [token.token for token in user.session_tokens],
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'birthday': user.birthday,
+            'permission_level': user.permission_level,
+            'hashed_password': user.hashed_password
         }
     except NoResultFound:
         return None
@@ -51,8 +51,8 @@ def create_session_token(user_id: int) -> str:
     # Generate JWT token
     expiration = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRATION_MINUTES)
     token = jwt_encode({
-        "sub": user_id,
-        "exp": expiration
+        'sub': user_id,
+        'exp': expiration
     }, SECRET_KEY, algorithm=USE_ALGORITHM)
 
     # Store the token in the database

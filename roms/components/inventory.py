@@ -26,7 +26,7 @@ class InventoryItem(BaseModel):
     name: str
     picture_link: str
     description: str
-    category: Literal["All", "Beverage", "Rice", "Noodle", "Snacks"]
+    category: Literal['All', 'Beverage', 'Rice', 'Noodle', 'Snacks']
 
     # Only accessible by Chef / Manager
     ingredients: Optional[List[InventoryItemIngredient]] = None
@@ -40,24 +40,24 @@ class InventoryItemUpdate(BaseModel):
     category: Optional[str] = None
 
 TEMPORARY_INGREDIENTS = [InventoryIngredient(
-    name="Kopi Powder",
+    name='Kopi Powder',
     ingredient_id=1,
     quantity=1252,
-    unit="g",
+    unit='g',
 ), InventoryIngredient(
-    name="Hot Water",
+    name='Hot Water',
     ingredient_id=2,
-    quantity=float("inf"),
-    unit="ml"
+    quantity=float('inf'),
+    unit='ml'
 )]
 
 TEMPORARY_INVENTORY = [InventoryItem(
     item_id=1,
     price=6.3,
-    name="Kopi Beng",
-    picture_link="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgYbqhuVAja_fGSBITWC7qCKjCsa0jcN5_0w&s",
-    description="yummy kopi mmmm",
-    category="Beverage",
+    name='Kopi Beng',
+    picture_link='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgYbqhuVAja_fGSBITWC7qCKjCsa0jcN5_0w&s',
+    description='yummy kopi mmmm',
+    category='Beverage',
     ingredients=[
         # Kopi Powder
         InventoryItemIngredient(ingredient_id=1, quantity=10),
@@ -67,22 +67,22 @@ TEMPORARY_INVENTORY = [InventoryItem(
 ), InventoryItem(
     item_id=2,
     price=12,
-    name="Super Fried Rice",
-    picture_link="https://www.gimmesomeoven.com/wp-content/uploads/2017/07/How-To-Make-Fried-Rice-Recipe-2-1.jpg",
-    description="better than uncle roger fried rice",
-    category="Rice",
+    name='Super Fried Rice',
+    picture_link='https://www.gimmesomeoven.com/wp-content/uploads/2017/07/How-To-Make-Fried-Rice-Recipe-2-1.jpg',
+    description='better than uncle roger fried rice',
+    category='Rice',
     ingredients=[
 
     ]
 )]
 
-@app.post("/inventory/items/get", tags=["inventory"])
+@app.post('/inventory/items/get', tags=['inventory'])
 def inventory_get(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager", "Chef", "Cashier", "Customer"]))
+        User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
     ],
 ) -> List[InventoryItem]:
-    if user.get_role() in ["Manager", "Chef"]:
+    if user.get_role() in ['Manager', 'Chef']:
         return TEMPORARY_INVENTORY
     else:
         copy = TEMPORARY_INVENTORY.copy()
@@ -94,57 +94,57 @@ def inventory_get(
 
         return copy
 
-@app.post("/inventory/items/add", tags=["inventory"])
+@app.post('/inventory/items/add', tags=['inventory'])
 def inventory_add_item(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     fields: InventoryItemIngredient
 ):
     pass
 
-@app.patch("/inventory/items/update", tags=["inventory"])
+@app.patch('/inventory/items/update', tags=['inventory'])
 def inventory_update_item(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     item_id: int,
     update_fields: InventoryItemUpdate
 ):
     pass
 
-@app.delete("/inventory/items/delete", tags=["inventory"])
+@app.delete('/inventory/items/delete', tags=['inventory'])
 def inventory_delete_item(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     ingredient_id: int
 ):
     pass
 
-@app.post("/inventory/ingredients/add", tags=["inventory"])
+@app.post('/inventory/ingredients/add', tags=['inventory'])
 def inventory_add_item(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     fields: InventoryIngredient
 ):
     pass
 
-@app.patch("/inventory/ingredients/update", tags=["inventory"])
+@app.patch('/inventory/ingredients/update', tags=['inventory'])
 def inventory_update_item(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     ingredient_id: int,
     update_fields: InventoryItemUpdate
 ):
     pass
 
-@app.delete("/inventory/ingredients/delete", tags=["inventory"])
+@app.delete('/inventory/ingredients/delete', tags=['inventory'])
 def inventory_delete_item(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
     ingredient_id: int
 ):

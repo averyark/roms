@@ -13,10 +13,10 @@ from ..user import User
 
 # Analytic API
 
-@app.get("/analytics/view/", tags=["analytics"])
+@app.get('/analytics/view/', tags=['analytics'])
 def view_analytics(
     user: Annotated[
-        User, Depends(validate_role(roles=["Manager"]))
+        User, Depends(validate_role(roles=['Manager']))
     ],
 ):
     pass

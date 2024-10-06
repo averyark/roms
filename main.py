@@ -19,21 +19,21 @@ from icecream import ic
 
 def test_signup():
     create_account(data=UserCreate(
-        email="customer1@gmail.com",
-        birthday="2005-09-21",
-        password="somepass12",
-        first_name="alan",
-        last_name="beth",
+        email='customer1@gmail.com',
+        birthday='2005-09-21',
+        password='somepass12',
+        first_name='alan',
+        last_name='beth',
         permission_level=10
     ))
 
 def test_signup_manager():
     create_account(data=UserCreate(
-        email="manager@roms.com",
-        birthday="2005-09-21",
-        password="manager%password122",
-        first_name="ger",
-        last_name="mana",
+        email='manager@roms.com',
+        birthday='2005-09-21',
+        password='manager%password122',
+        first_name='ger',
+        last_name='mana',
         permission_level=255
     ))
 
@@ -43,6 +43,6 @@ def test_viewall():
         ic(dat.user_id, dat.email, dat.first_name, dat.last_name, dat.permission_level)
 
 def test_login():
-    login(get_userid_from_email("manager@roms.com"), "manager%password122")
+    login(get_userid_from_email('manager@roms.com'), 'manager%password122')
 if __name__ == '__main__':
     test_viewall()
