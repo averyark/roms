@@ -3,7 +3,7 @@
 # @authors: averyark
 
 from pydantic import BaseModel
-from roms.user import validate_user_data
+from roms.validate import validate_user_data
 import unittest
 import pytest
 

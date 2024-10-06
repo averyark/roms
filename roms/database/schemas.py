@@ -26,7 +26,7 @@ class UserData(UserBase):
     hashed_password: str
     session_tokens: List[str] = Field(default_factory=list)
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
     def commit(self):
