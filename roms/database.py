@@ -4,15 +4,48 @@
 
 from typing import Optional, List
 from icecream import ic
-import sqlite3
 from pydantic import BaseModel, Field
 
-db_path = "mock-database.db"
-db = sqlite3.connect(db_path)
-db_cursor = db.cursor()
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
+DATABASE_URL = "sqlite:///./sql_app.db"
+
+engine = create_engine(
+    url=DATABASE_URL, connect_args={"check_same_thread": True}
+)
+SessionLocal = sessionmaker(bind=engine)
+
+Base = declarative_base()
 
 # TODO: Switch to SQLAlchemy
 
+# SQLAlchemy Base
+class User(Base):
+    __tablename__ = "users"
+
+    user_id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True, index=True)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+
+    hashed_password = Column(String)
+
+    active_session_tokens = relationship("SessionToken",back_populates="user_id")
+
+class SessionToken(Base):
+    __tablename__ = "SessionToken"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"))
+
+    user = relationship("User", back_populates="active_session_tokens")
+
+# Pydantic Base
 class UserData(BaseModel):
     # Shared
     user_id: int
