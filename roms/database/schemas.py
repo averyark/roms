@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field, EmailStr
-from typing import List
+from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator
+from typing import List, Annotated
 from .session import session
 from .models import SessionTokenModel, UserModel
+from datetime import datetime
+import re
 
 # Pydantic Schemas
 class SessionTokenBase(BaseModel):
@@ -10,16 +12,42 @@ class SessionTokenBase(BaseModel):
 class SessionTokenCreate(SessionTokenBase):
     user_id: int
 
+def parse_birthday(value: str) -> datetime.date:
+        # Parse the date from yyyymmdd format
+    try:
+        date = datetime.strptime(value, '%Y%m%d').date()
+    except ValueError:
+        raise ValueError('Invalid date format. Use yyyymmdd.')
+    else:
+        year = date.year
+        now_year = datetime.now().year
+        if year < 1900 or year > now_year:
+            raise ValueError(f'Invalid date format. Year must be between 1900 and {now_year}.')
+
+        return
+
+
 class UserBase(BaseModel):
     email: EmailStr
-    first_name: str
-    last_name: str
-    birthday: str
+    first_name: Annotated[str, StringConstraints(min_length=1, max_length=256)]
+    last_name: Annotated[str, StringConstraints(min_length=1,max_length=256)]
+    birthday: Annotated[str, AfterValidator(parse_birthday)]
     permission_level: int = Field(default=1)  # Default permission level for new users
 
+def validate_password(value):
+    if len(value) < 8 or len(value) > 256:
+        raise ValueError('Password must be between 8 and 256 characters')
+    if not re.search(r'^[a-zA-Z0-9\!\'\#\$\%\&\(\)\*\+\,\-\:\;\<\=\>\?\@\[\]\^\_\`\{\|\}\~\.\/]+$', value):
+        raise ValueError('Password must only contain alphabets numbers and !\'#$%&()*+,-:;<=>?@[]^_`{|}~/.')
+    if not re.search(r'[A-Za-z]', value):
+        raise ValueError('Password must contain at least one alphabet')
+    if not re.search(r'\d', value):
+        raise ValueError('Password must contain at least one number')
+    return value
 # Extra parameters required for user creation
+
 class UserCreate(UserBase):
-    password: str
+    password: Annotated[str, AfterValidator(validate_password)]
 
 class UserData(UserBase):
     user_id: int

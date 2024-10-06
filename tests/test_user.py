@@ -3,9 +3,10 @@
 # @authors: averyark
 
 from pydantic import BaseModel
-from roms.validate import validate_user_data
+#from roms.validate import validate_user_data
 import unittest
 import pytest
+from roms.database import UserCreate
 
 class UserInfo(BaseModel):
     birthday: str
@@ -16,326 +17,379 @@ class UserInfo(BaseModel):
 
 # birthday constraint test
 def test_validateBirthday():
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    UserCreate(
+        birthday='20050921',
         email='first@gmail.com',
         password='somepassword@12345678',
         first_name='first',
         last_name='last'
-    ))
+    )
 
     # This is not valid in py 3.9
     # reference to test: https://github.com/averyark/roms/actions/runs/10922064922/job/30315543710
-    # validate_user_data(UserInfo(
+    # UserCreate(
     #     'birthday': '20050921',
     #     email='first@gmail.com',
     #     first_name='first',
     #     last_name='last'
-    # ))
+    # )
 
     try:
-        validate_user_data(UserInfo(
-            birthday='09-21-2005',
+        UserCreate(
+            birthday='18991205',
             email='first@gmail.com',
             password='somepassword@12345678',
             first_name='first',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid birthday")
+        raise ValueError('Validation passed for invalid birthday')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='09-2005-21',
+        UserCreate(
+            birthday='29991205',
             email='first@gmail.com',
             password='somepassword@12345678',
             first_name='first',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid birthday")
+        raise ValueError('Validation passed for invalid birthday')
+
+    try:
+        UserCreate(
+            birthday='09212005',
+            email='first@gmail.com',
+            password='somepassword@12345678',
+            first_name='first',
+            last_name='last'
+        )
+    except:
+        pass
+    else:
+        raise ValueError('Validation passed for invalid birthday')
+
+    try:
+        UserCreate(
+            birthday='09200521',
+            email='first@gmail.com',
+            password='somepassword@12345678',
+            first_name='first',
+            last_name='last'
+        )
+    except:
+        pass
+    else:
+        raise ValueError('Validation passed for invalid birthday')
 
 # email constraint test
 def test_validateEmail():
 
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    UserCreate(
+        birthday='20050921',
         email='first@gmail.com',
         password='somepassword@12345678',
         first_name='first',
         last_name='last'
-    ))
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    )
+    UserCreate(
+        birthday='20050921',
         email='first.last@gmail.com',
         password='somepassword@12345678',
         first_name='first',
         last_name='last'
-    ))
+    )
 
+    #max 64
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
-            email=f'{"a"*50}@gmail.com',
+        UserCreate(
+            birthday='20050921',
+            email=f'{"a"*65}@gmail.com',
             password='somepassword@12345678',
             first_name='first',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid email')
 
     try:
-        validate_user_data(UserInfo(
-            birthday= '2005-09-21',
+        UserCreate(
+            birthday= '20050921',
             email=1,
             password='somepassword@12345678',
             first_name='first',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid email')
+
+    # NOTE: Now valid in #2
+    # try:
+    #     UserCreate(
+    #         birthday='20050921',
+    #         email='first_last@gmail.com',
+    #         password='somepassword@12345678',
+    #         first_name='first',
+    #         last_name='last'
+    #     )
+    # except:
+    #     pass
+    # else:
+    #     raise ValueError('Validation passed for invalid email')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
-            email='first_last@gmail.com',
-            password='somepassword@12345678',
-            first_name='first',
-            last_name='last'
-        ))
-    except:
-        pass
-    else:
-        raise ValueError("Validation passed for invalid email")
-
-    try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='@gmail.com',
             password='somepassword@12345678',
             first_name='first',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid email')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first@gmail',
             password='somepassword@12345678',
             first_name='first',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid email')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.com',
             password='somepassword@12345678',
             first_name='first',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid email')
 
 # name constraint test
 def test_validateName():
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    UserCreate(
+        birthday='20050921',
         email='first.last@gmail.com',
         password='somepassword@12345678',
         first_name='first',
         last_name='last'
-    ))
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    )
+    UserCreate(
+        birthday='20050921',
         email='first.last@gmail.com',
         password='somepassword@12345678',
         first_name='first middle',
         last_name='last'
-    ))
+    )
 
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    UserCreate(
+        birthday='20050921',
         email='first.last@gmail.com',
         password='somepassword@12345678',
         first_name='first middle',
         last_name='last last2'
-    ))
+    )
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email=1,
             password='somepassword@12345678',
             first_name='first.',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid name')
 
+    # NOTE: This is now valid in #2
+    # try:
+    #     UserCreate(
+    #         birthday='20050921',
+    #         email='first.last@gmail.com',
+    #         password='somepassword@12345678',
+    #         first_name='first',
+    #         last_name='last.'
+    #     )
+    # except:
+    #     pass
+    # else:
+    #     raise ValueError('Validation passed for invalid name')
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
             password='somepassword@12345678',
-            first_name='first',
-            last_name='last.'
-        ))
-    except:
-        pass
-    else:
-        raise ValueError("Validation passed for invalid email")
-
-    try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
-            email='first.last@gmail.com',
-            password='somepassword@12345678',
-            first_name='a'*51,
+            first_name="",
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid name')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
             password='somepassword@12345678',
             first_name='first',
-            last_name='a'*51
-        ))
+            last_name=""
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid name')
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
+            email='first.last@gmail.com',
+            password='somepassword@12345678',
+            first_name='a'*257,
+            last_name='last'
+        )
+    except:
+        pass
+    else:
+        raise ValueError('Validation passed for invalid name')
+
+    try:
+        UserCreate(
+            birthday='20050921',
+            email='first.last@gmail.com',
+            password='somepassword@12345678',
+            first_name='first',
+            last_name='a'*257
+        )
+    except:
+        pass
+    else:
+        raise ValueError('Validation passed for invalid name')
+    try:
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
             password='somepassword@12345678',
             first_name=1,
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid name')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
             password='somepassword@12345678',
             first_name=1,
             last_name=2,
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid email")
+        raise ValueError('Validation passed for invalid name')
 
 # password constraint test
 def test_validatePassword():
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    UserCreate(
+        birthday='20050921',
         email='first.last@gmail.com',
         password='somepassword@12345678',
         first_name='first',
         last_name='last'
-    ))
-    validate_user_data(UserInfo(
-        birthday='2005-09-21',
+    )
+    UserCreate(
+        birthday='20050921',
         email='first.last@gmail.com',
         password='somepassword12345678',
         first_name='first middle',
         last_name='last'
-    ))
+    )
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             password='abc123',
             email='first.last@gmail.com',
             first_name='first middle',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid password")
+        raise ValueError('Validation passed for invalid password')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
             password='somepass@123XÆ ',
             first_name='first middle',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid password")
+        raise ValueError('Validation passed for invalid password')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
-            password="a"*51,
+            password='a'*51,
             first_name='first middle',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid password")
+        raise ValueError('Validation passed for invalid password')
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
-            password="12345678",
+            password='12345678',
             first_name='first middle',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid password")
+        raise ValueError('Validation passed for invalid password')
 
 
     try:
-        validate_user_data(UserInfo(
-            birthday='2005-09-21',
+        UserCreate(
+            birthday='20050921',
             email='first.last@gmail.com',
-            password="abcdefgh",
+            password='abcdefgh',
             first_name='first middle',
             last_name='last'
-        ))
+        )
     except:
         pass
     else:
-        raise ValueError("Validation passed for invalid password")
+        raise ValueError('Validation passed for invalid password')

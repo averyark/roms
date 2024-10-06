@@ -14,13 +14,13 @@ class UserModel(Base):
     permission_level = Column(Integer)
     hashed_password = Column(String)
 
-    session_tokens = relationship("SessionTokenModel", back_populates="user")
+    session_tokens = relationship('SessionTokenModel', back_populates='user')
 
 class SessionTokenModel(Base):
     __tablename__ = 'UserSessionTokens'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"))
+    user_id = Column(Integer, ForeignKey('users.user_id'))
     token = Column(String, unique=True)
 
-    user = relationship("UserModel", back_populates="session_tokens")
+    user = relationship('UserModel', back_populates='session_tokens')
