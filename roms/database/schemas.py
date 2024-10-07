@@ -12,7 +12,7 @@ class SessionTokenBase(BaseModel):
 class SessionTokenCreate(SessionTokenBase):
     user_id: int
 
-def parse_birthday(value: str) -> datetime.date:
+def parse_birthday(value: str) -> str:
         # Parse the date from yyyymmdd format
     try:
         date = datetime.strptime(value, '%Y%m%d').date()
@@ -24,7 +24,7 @@ def parse_birthday(value: str) -> datetime.date:
         if year < 1900 or year > now_year:
             raise ValueError(f'Invalid date format. Year must be between 1900 and {now_year}.')
 
-        return
+        return value
 
 
 class UserBase(BaseModel):
