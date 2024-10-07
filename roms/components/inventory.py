@@ -113,7 +113,7 @@ def inventory_add_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
-    fields: InventoryItemIngredient
+    fields: ItemCreate
 ):
     pass
 
