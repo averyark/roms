@@ -5,7 +5,13 @@
 from typing import Annotated, Literal, Optional, List
 from fastapi import Depends
 from pydantic import BaseModel
+from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination import Page
+from sqlalchemy import select
 
+from ..database import session
+from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
+from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate
 from ..account import authenticate, validate_role
 from ..api import app
 from ..user import User
@@ -94,6 +100,14 @@ def inventory_get(
 
         return copy
 
+@app.post('/inventory/items/view', tags=['inventory'])
+def view_items(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+) -> Page[Item]:
+    return paginate(session, select(ItemModel, "*").order_by(ItemModel.item_id))
+
 @app.post('/inventory/items/add', tags=['inventory'])
 def inventory_add_item(
     user: Annotated[
@@ -123,7 +137,7 @@ def inventory_delete_item(
     pass
 
 @app.post('/inventory/ingredients/add', tags=['inventory'])
-def inventory_add_item(
+def ingredients_add_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -132,7 +146,7 @@ def inventory_add_item(
     pass
 
 @app.patch('/inventory/ingredients/update', tags=['inventory'])
-def inventory_update_item(
+def ingredients_update_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -142,7 +156,7 @@ def inventory_update_item(
     pass
 
 @app.delete('/inventory/ingredients/delete', tags=['inventory'])
-def inventory_delete_item(
+def ingredientsy_delete_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
