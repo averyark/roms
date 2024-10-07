@@ -20,7 +20,7 @@ from icecream import ic
 def test_signup():
     create_account(data=UserCreate(
         email='customer1@gmail.com',
-        birthday='2005-09-21',
+        birthday='20050921',
         password='somepass12',
         first_name='alan',
         last_name='beth',
@@ -30,7 +30,7 @@ def test_signup():
 def test_signup_manager():
     create_account(data=UserCreate(
         email='manager@roms.com',
-        birthday='2005-09-21',
+        birthday='20050921',
         password='manager%password122',
         first_name='ger',
         last_name='mana',
@@ -40,9 +40,16 @@ def test_signup_manager():
 def test_viewall():
 
     for dat in session.query(UserModel).all():
-        ic(dat.user_id, dat.email, dat.first_name, dat.last_name, dat.permission_level)
+        ic(dat.user_id, dat.email, dat.first_name, dat.last_name, dat.birthday, dat.permission_level)
 
 def test_login():
     login(get_userid_from_email('manager@roms.com'), 'manager%password122')
 if __name__ == '__main__':
+
+    #session.query(UserModel).delete()
+    #session.commit()
+
+    test_signup_manager()
+    test_signup()
+
     test_viewall()

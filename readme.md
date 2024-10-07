@@ -7,7 +7,7 @@
 
 ### How to use
 > [!WARNING]
-ROMS is only compatible with 3.10 and 3.11
+ROMS is only compatible with Python 3.10 and 3.11
 
 Make sure you have python environment installed. Run the following if it is not installed in your directory.
 
@@ -44,7 +44,7 @@ FastAPI dev main.py
 APIs are accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
 
 > [!IMPORTANT]
-Some apis require authentication, so you have to login to use them. Below are some account you can use.
+Some apis require authentication, so you have to login to use them. Below are some sample account you can use.
 
 Alternatively, you can create your own account
 

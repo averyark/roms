@@ -2,21 +2,23 @@
 # @creation_date: 19/09/2024
 # @authors: averyark
 
-from icecream import ic
+from typing import Annotated, Optional
+from asyncio import run_coroutine_threadsafe
+
 from .credentials import SECRET_KEY, USE_ALGORITHM, pwd_context
 from .api import app
-from .database import session, create_session_token, create_user, UserModel, UserCreate
+from .database import session, create_session_token, create_user, UserModel, UserCreate, UserBase
 from .user import get_user, User
-from asyncio import run_coroutine_threadsafe
 
 from jwt import encode as jwt_encode, decode as jwt_decode, ExpiredSignatureError
 from pydantic import BaseModel
 from fastapi import HTTPException, status, Depends
 from fastapi.security.oauth2 import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
+from sqlalchemy import select
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/account/swagger_login')
-
-from typing import Annotated, Optional
 
 # NOTE: Annotated[str, Depends(oauth2_scheme)] is for swagger interface
 async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -197,7 +199,7 @@ async def create_account_async(user: Annotated[User, Depends(validate_role(roles
     create_account(data)
 
 @app.patch('/account/edit/credentials/', tags=['account'])
-def edit_credentials(
+async def edit_credentials(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -211,7 +213,7 @@ def edit_credentials(
     except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 @app.delete('/account/edit/delete/', tags=['account'])
-def delete_account(
+async def delete_account(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -223,7 +225,7 @@ def delete_account(
     except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 @app.patch('/account/edit/user_info', tags=['account'])
-def update_user_info(
+async def update_user_info(
     user: Annotated[
         User, Depends(authenticate)
     ],
@@ -245,3 +247,12 @@ def update_user_info(
     target_user.email = update_fields.email
 
     target_user.commit()
+
+@app.get('/users', tags=['account'])
+async def get_users(
+    user: Annotated[
+        User, Depends(validate_role(roles=["Manager"]))
+    ]
+) -> Page[UserBase]:
+
+    return paginate(session, select(UserModel, UserModel.email, UserModel.first_name, UserModel.last_name, UserModel.birthday, UserModel.permission_level).order_by(UserModel.permission_level))
