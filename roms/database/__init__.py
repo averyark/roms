@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import relationship, sessionmaker, declarative_base
+from sqlalchemy.orm import relationship, sessionmaker, declarative_base, class_mapper
 
+from .models import *
 from .schemas import UserBase, UserData, UserCreate, IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate
 from .models import UserModel, SessionTokenModel, ItemModel, IngredientModel, ItemIngredientModel
 from .session import session
@@ -56,7 +57,7 @@ def create_item(item: ItemCreate):
     return db_item
 
 def create_ingredient(ingredient: IngredientCreate):
-    db_ingredient = ItemModel(
+    db_ingredient = IngredientModel(
         name=ingredient.name,
         stock_quantity=ingredient.stock_quantity,
         unit=ingredient.unit
@@ -65,6 +66,12 @@ def create_ingredient(ingredient: IngredientCreate):
     session.commit()
     session.refresh(db_ingredient)
     return db_ingredient
+
+def get_item(item_id: int):
+    return session.query(ItemModel).filter(ItemModel.item_id == item_id).one()
+
+def get_ingredient(ingredient_id: int):
+    return session.query(IngredientModel).filter(IngredientModel.ingredient_id == ingredient_id).one()
 
 def get_user_data_in_dict(user_id: int) -> dict:
     try:
@@ -96,6 +103,20 @@ def create_session_token(user_id: int) -> str:
     session.commit()
 
     return token
+
+def to_dict(obj):
+    """
+    Convert SQLAlchemy model instance into a dictionary.
+    """
+    if not obj:
+        return None
+
+    # Get the columns of the model
+    columns = [column.key for column in class_mapper(obj.__class__).columns]
+
+    # Create a dictionary with column names as keys and their values
+    return {column: getattr(obj, column) for column in columns}
+
 
 # Create tables
 Base.metadata.create_all(engine)

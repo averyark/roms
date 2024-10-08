@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal_column, Float
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float
 from sqlalchemy.orm import relationship
 from .session import Base
 
@@ -33,15 +33,6 @@ class IngredientModel(Base):
     stock_quantity = Column(Float)
     unit = Column(String)
 
-class ItemIngredientModel(Base):
-    __tablename__ = 'item_ingredient'
-
-    item_ingredient_id = Column(Integer, primary_key=True)
-    item_id = Column(Integer, ForeignKey('item.item_id'))
-    quantity = Column(Float)
-
-    item = relationship('IngredientModel', back_populates="ingredients")
-
 class ItemModel(Base):
     __tablename__ = 'item'
 
@@ -50,6 +41,15 @@ class ItemModel(Base):
     name = Column(String)
     picture_link = Column(String)
     description = Column(String)
-    category = literal_column(['All', 'Beverage', 'Rice', 'Noodle', 'Snacks'])
+    category = Column(String) #literal(['All', 'Beverage', 'Rice', 'Noodle', 'Snacks'])
 
-    ingredients = relationship('IngredientModel',back_populates="item")
+    ingredients = relationship('ItemIngredientModel',back_populates="item")
+
+class ItemIngredientModel(Base):
+    __tablename__ = 'item_ingredient'
+
+    item_ingredient_id = Column(Integer, primary_key=True)
+    item_id = Column(Integer, ForeignKey('item.item_id'))
+    quantity = Column(Float)
+
+    item = relationship('ItemModel', back_populates="ingredients")

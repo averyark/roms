@@ -45,71 +45,35 @@ class InventoryItemUpdate(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
 
-TEMPORARY_INGREDIENTS = [InventoryIngredient(
-    name='Kopi Powder',
-    ingredient_id=1,
-    quantity=1252,
-    unit='g',
-), InventoryIngredient(
-    name='Hot Water',
-    ingredient_id=2,
-    quantity=float('inf'),
-    unit='ml'
-)]
-
-TEMPORARY_INVENTORY = [InventoryItem(
-    item_id=1,
-    price=6.3,
-    name='Kopi Beng',
-    picture_link='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgYbqhuVAja_fGSBITWC7qCKjCsa0jcN5_0w&s',
-    description='yummy kopi mmmm',
-    category='Beverage',
-    ingredients=[
-        # Kopi Powder
-        InventoryItemIngredient(ingredient_id=1, quantity=10),
-        # Water
-        InventoryItemIngredient(ingredient_id=2, quantity=200)
-    ]
-), InventoryItem(
-    item_id=2,
-    price=12,
-    name='Super Fried Rice',
-    picture_link='https://www.gimmesomeoven.com/wp-content/uploads/2017/07/How-To-Make-Fried-Rice-Recipe-2-1.jpg',
-    description='better than uncle roger fried rice',
-    category='Rice',
-    ingredients=[
-
-    ]
-)]
-
 @app.post('/inventory/items/get', tags=['inventory'])
-def inventory_get(
+async def inventory_get(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
     ],
 ) -> List[InventoryItem]:
-    if user.get_role() in ['Manager', 'Chef']:
-        return TEMPORARY_INVENTORY
-    else:
-        copy = TEMPORARY_INVENTORY.copy()
-        for dict in copy:
-            try:
-                del dict.ingredients
-                pass
-            except: pass # swallow error
+    # if user.get_role() in ['Manager', 'Chef']:
+    #     return TEMPORARY_INVENTORY
+    # else:
+    #     copy = TEMPORARY_INVENTORY.copy()
+    #     for dict in copy:
+    #         try:
+    #             del dict.ingredients
+    #             pass
+    #         except: pass # swallow error
 
-        return copy
+    #     return copy
+    pass
 
-@app.post('/inventory/items/view', tags=['inventory'])
-def view_items(
+@app.post('/inventory/items/get', tags=['inventory'])
+async def get_items(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
 ) -> Page[Item]:
-    return paginate(session, select(ItemModel, "*").order_by(ItemModel.item_id))
+    return paginate(session, select(ItemModel).order_by(ItemModel.item_id))
 
 @app.post('/inventory/items/add', tags=['inventory'])
-def inventory_add_item(
+async def inventory_add_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -118,7 +82,7 @@ def inventory_add_item(
     pass
 
 @app.patch('/inventory/items/update', tags=['inventory'])
-def inventory_update_item(
+async def inventory_update_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -128,7 +92,7 @@ def inventory_update_item(
     pass
 
 @app.delete('/inventory/items/delete', tags=['inventory'])
-def inventory_delete_item(
+async def inventory_delete_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -137,7 +101,7 @@ def inventory_delete_item(
     pass
 
 @app.post('/inventory/ingredients/add', tags=['inventory'])
-def ingredients_add_item(
+async def ingredients_add_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -146,7 +110,7 @@ def ingredients_add_item(
     pass
 
 @app.patch('/inventory/ingredients/update', tags=['inventory'])
-def ingredients_update_item(
+async def ingredients_update_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -156,7 +120,7 @@ def ingredients_update_item(
     pass
 
 @app.delete('/inventory/ingredients/delete', tags=['inventory'])
-def ingredientsy_delete_item(
+async def ingredientsy_delete_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],

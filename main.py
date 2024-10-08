@@ -4,12 +4,12 @@
 
 from asyncio import run_coroutine_threadsafe
 from roms.account import login, signup, create_account, get_userid_from_email, swagger_login
-from roms.database import UserCreate, session, UserModel
+from roms.database.models import UserModel, IngredientModel, ItemModel, ItemIngredientModel
+from roms.database import session, UserCreate, ItemCreate, IngredientCreate, IngredientItemCreate, create_item, create_item_ingredient, create_ingredient, get_item, get_ingredient, to_dict
 
 from roms import userPermissionRanks
 from roms import app
 from roms.user import get_user
-from roms.database import UserData, get_user_data_in_dict
 from roms.credentials import pwd_context
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -44,12 +44,48 @@ def test_viewall():
 
 def test_login():
     login(get_userid_from_email('manager@roms.com'), 'manager%password122')
+
+def test_create_item():
+    # Create the ingredients
+    create_ingredient(IngredientCreate(
+        name='Kopi Powder',
+        stock_quantity=1252,
+        unit='g',
+    ))
+    create_ingredient(IngredientCreate(
+        name='Hot Water',
+        stock_quantity=float('inf'),
+        unit='ml'
+    ))
+    # Create the items
+    create_item(ItemCreate(
+        price=6.3,
+        name='Kopi Beng',
+        picture_link='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgYbqhuVAja_fGSBITWC7qCKjCsa0jcN5_0w&s',
+        description='yummy kopi mmmm',
+        category='Beverage',
+    ))
+    # Create ingredient-item correlation
+    create_item_ingredient(IngredientItemCreate(
+        ingredient_id=1,
+        quantity=10
+    ))
+    create_item_ingredient(IngredientItemCreate(
+        ingredient_id=2,
+        quantity=200
+    ))
+
+    print(get_item(1))
+
 if __name__ == '__main__':
 
     #session.query(UserModel).delete()
     #session.commit()
 
-    test_signup_manager()
-    test_signup()
+    #test_signup_manager()
+    #test_signup()
 
-    test_viewall()
+    #test_viewall()
+
+    #test_create_item()
+    print(to_dict(get_item(1)))
