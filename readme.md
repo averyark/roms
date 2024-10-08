@@ -50,7 +50,7 @@ Alternatively, you can create your own account
 
 Role|Email|Password
 -|-|-
-Customer|customer1@gmail.com|somepass1
+Customer|customer1@gmail.com|somepass12
 Manager|manager@roms.com|manager%password122
 
 > More in [Account](#Account)

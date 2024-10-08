@@ -49,7 +49,7 @@ if __name__ == '__main__':
     #session.query(UserModel).delete()
     #session.commit()
 
-    test_signup_manager()
-    test_signup()
+    #test_signup_manager()
+    #test_signup()
 
     test_viewall()
