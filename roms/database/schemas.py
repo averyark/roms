@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator
-from typing import List, Annotated
+from typing import List, Annotated, Literal
 from .session import session
 from .models import SessionTokenModel, UserModel
 from datetime import datetime
@@ -25,7 +25,6 @@ def parse_birthday(value: str) -> str:
             raise ValueError(f'Invalid date format. Year must be between 1900 and {now_year}.')
 
         return value
-
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -98,3 +97,42 @@ class UserData(UserBase):
 
         # Commit the changes to the database
         session.commit()
+
+class IngredientBase(BaseModel):
+    name: str
+    stock_quantity: float
+    unit: str
+
+class IngredientCreate(IngredientBase):
+    pass
+
+class Ingredient(IngredientBase):
+    pass
+
+class IngredientItemBase(BaseModel):
+    ingredient_id: int
+    quantity: float
+
+class IngredientItemCreate(IngredientItemBase):
+    pass
+
+class IngredientItem(IngredientItemBase):
+    pass
+
+class ItemBase(BaseModel):
+    price: float
+    name: str
+    picture_link: str
+    description: str
+    category: Literal['All', 'Beverage', 'Rice', 'Noodle', 'Snacks']
+
+class ItemCreate(ItemBase):
+    pass
+
+class Item(ItemBase):
+    item_id: int
+
+    ingredients: List[dict] = Field(default_factory=list)
+
+    class ConfigDict:
+        from_attributes = True

@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import relationship, sessionmaker, declarative_base
+from sqlalchemy.orm import relationship, sessionmaker, declarative_base, class_mapper
 
-from .schemas import UserBase, UserData, UserCreate
-from .models import UserModel, SessionTokenModel
+from .models import *
+from .schemas import UserBase, UserData, UserCreate, IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate
+from .models import UserModel, SessionTokenModel, ItemModel, IngredientModel, ItemIngredientModel
 from .session import session
 from ..credentials import pwd_context, SECRET_KEY, USE_ALGORITHM, JWT_EXPIRATION_MINUTES
 
@@ -30,6 +31,47 @@ def create_user(user: UserCreate):
     session.commit()
     session.refresh(db_user)
     return db_user
+
+def create_item_ingredient(item_ingredient: IngredientItemCreate):
+    db_item_ingredient = ItemIngredientModel(
+        item_id=item_ingredient.ingredient_id,
+        quantity=item_ingredient.stock_quantity
+    )
+    session.add(db_item_ingredient)
+    session.commit()
+    session.refresh(db_item_ingredient)
+    return db_item_ingredient
+
+def create_item(item: ItemCreate):
+    db_item = ItemModel(
+        price=item.price,
+        name=item.name,
+        picture_link=item.picture_link,
+        description=item.description,
+        category=item.category,
+    )
+
+    session.add(db_item)
+    session.commit()
+    session.refresh(db_item)
+    return db_item
+
+def create_ingredient(ingredient: IngredientCreate):
+    db_ingredient = IngredientModel(
+        name=ingredient.name,
+        stock_quantity=ingredient.stock_quantity,
+        unit=ingredient.unit
+    )
+    session.add(db_ingredient)
+    session.commit()
+    session.refresh(db_ingredient)
+    return db_ingredient
+
+def get_item(item_id: int):
+    return session.query(ItemModel).filter(ItemModel.item_id == item_id).one()
+
+def get_ingredient(ingredient_id: int):
+    return session.query(IngredientModel).filter(IngredientModel.ingredient_id == ingredient_id).one()
 
 def get_user_data_in_dict(user_id: int) -> dict:
     try:
@@ -61,6 +103,20 @@ def create_session_token(user_id: int) -> str:
     session.commit()
 
     return token
+
+def to_dict(obj):
+    """
+    Convert SQLAlchemy model instance into a dictionary.
+    """
+    if not obj:
+        return None
+
+    # Get the columns of the model
+    columns = [column.key for column in class_mapper(obj.__class__).columns]
+
+    # Create a dictionary with column names as keys and their values
+    return {column: getattr(obj, column) for column in columns}
+
 
 # Create tables
 Base.metadata.create_all(engine)

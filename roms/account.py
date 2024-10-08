@@ -185,7 +185,6 @@ def get_userid_from_email(email: str) -> int:
     return user_id
 
 def create_account(data: UserCreate):
-    # redundant, already checked by pydantic but just putting it here for now
     user = session.query(UserModel).filter(UserModel.email == data.email).one_or_none()
 
     if user:
