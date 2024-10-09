@@ -11,12 +11,6 @@ from ..credentials import pwd_context, SECRET_KEY, USE_ALGORITHM, JWT_EXPIRATION
 from datetime import datetime, timezone, timedelta
 from jwt import encode as jwt_encode, decode as jwt_decode, ExpiredSignatureError
 
-# SQLAlchemy setup
-Base = declarative_base()
-engine = create_engine('sqlite:///mock_database.db')
-Session = sessionmaker(bind=engine)
-session = Session()
-
 def create_user(user: UserCreate):
     hashed_password = pwd_context.hash(user.password)
     db_user = UserModel(
@@ -34,8 +28,9 @@ def create_user(user: UserCreate):
 
 def create_item_ingredient(item_ingredient: IngredientItemCreate):
     db_item_ingredient = ItemIngredientModel(
-        item_id=item_ingredient.ingredient_id,
-        quantity=item_ingredient.stock_quantity
+        item_id=item_ingredient.item_id,
+        ingredient_id=item_ingredient.ingredient_id,
+        quantity=item_ingredient.quantity
     )
     session.add(db_item_ingredient)
     session.commit()
@@ -43,6 +38,9 @@ def create_item_ingredient(item_ingredient: IngredientItemCreate):
     return db_item_ingredient
 
 def create_item(item: ItemCreate):
+    if session.query(ItemModel).filter(ItemModel.name == item.name).one_or_none():
+        raise LookupError("This item already exist")
+    
     db_item = ItemModel(
         price=item.price,
         name=item.name,
@@ -116,7 +114,3 @@ def to_dict(obj):
 
     # Create a dictionary with column names as keys and their values
     return {column: getattr(obj, column) for column in columns}
-
-
-# Create tables
-Base.metadata.create_all(engine)

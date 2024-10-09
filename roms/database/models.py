@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float
 from sqlalchemy.orm import relationship
-from .session import Base
+from .session import Base, session, engine
+
+engine = create_engine('sqlite:///mock_database.db')
 
 # SQLAlchemy models
 class UserModel(Base):
@@ -49,7 +51,11 @@ class ItemIngredientModel(Base):
     __tablename__ = 'item_ingredient'
 
     item_ingredient_id = Column(Integer, primary_key=True)
+    ingredient_id = Column(Integer, ForeignKey('ingredient.ingredient_id'))
     item_id = Column(Integer, ForeignKey('item.item_id'))
     quantity = Column(Float)
 
     item = relationship('ItemModel', back_populates="ingredients")
+
+# Create tables
+Base.metadata.create_all(engine)
