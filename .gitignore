@@ -2,3 +2,4 @@ __pycache__/
 venv/
 *.pdf
 .venv
+mock_database.db

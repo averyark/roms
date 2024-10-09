@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator
-from typing import List, Annotated, Literal
+from typing import List, Annotated, Literal, Optional
 from .session import session
 from .models import SessionTokenModel, UserModel
 from datetime import datetime
@@ -111,6 +111,7 @@ class Ingredient(IngredientBase):
 
 class IngredientItemBase(BaseModel):
     ingredient_id: int
+    item_id: int
     quantity: float
 
 class IngredientItemCreate(IngredientItemBase):
@@ -132,7 +133,7 @@ class ItemCreate(ItemBase):
 class Item(ItemBase):
     item_id: int
 
-    ingredients: List[dict] = Field(default_factory=list)
+    ingredients: Optional[List[IngredientItem]] = Field(default_factory=list)
 
     class ConfigDict:
         from_attributes = True

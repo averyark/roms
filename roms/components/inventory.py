@@ -6,36 +6,20 @@ from typing import Annotated, Literal, Optional, List
 from fastapi import Depends
 from pydantic import BaseModel
 from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import Page
+from fastapi_pagination import paginate as api_pagiante
+from fastapi_pagination import Page, set_page
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
-from ..database import session
+from ..database import session, to_dict
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
-from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate
+from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase
 from ..account import authenticate, validate_role
 from ..api import app
 from ..user import User
 
-class InventoryIngredient(BaseModel):
-    ingredient_id: int
-    name: str
-    quantity: float
-    unit: str
-
-class InventoryItemIngredient(BaseModel):
-    ingredient_id: int
-    quantity: float
-
-class InventoryItem(BaseModel):
-    item_id: int
-    price: float
-    name: str
-    picture_link: str
-    description: str
-    category: Literal['All', 'Beverage', 'Rice', 'Noodle', 'Snacks']
-
-    # Only accessible by Chef / Manager
-    ingredients: Optional[List[InventoryItemIngredient]] = None
+from fastapi_pagination.utils import disable_installed_extensions_check
+disable_installed_extensions_check()
 
 class InventoryItemUpdate(BaseModel):
     item_id: Optional[int] = None
@@ -45,24 +29,73 @@ class InventoryItemUpdate(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
 
+class ItemGetIngredient(BaseModel):
+    name: str
+    quantity: float
+    unit: str
+
+class ItemGet(ItemBase):
+    item_id: int
+    ingredients: List[ItemGetIngredient] = None
+
+class ItemPage(ItemBase):
+    item_id: int
+
 @app.post('/inventory/items/get', tags=['inventory'])
 async def inventory_get(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
     ],
-) -> List[InventoryItem]:
-    # if user.get_role() in ['Manager', 'Chef']:
-    #     return TEMPORARY_INVENTORY
-    # else:
-    #     copy = TEMPORARY_INVENTORY.copy()
-    #     for dict in copy:
-    #         try:
-    #             del dict.ingredients
-    #             pass
-    #         except: pass # swallow error
+    filter: str = None,
+) -> Page[ItemGet]:
+    if user.get_role() in ['Manager', 'Chef']:
+        query = select(
+            ItemModel.item_id,
+            ItemModel.name,
+            ItemModel.price,
+            ItemModel.description,
+            ItemModel.category,
+            ItemModel.picture_link,
+        ).order_by(ItemModel.item_id)
 
-    #     return copy
-    pass
+        set_page(Page[ItemPage])
+        results = paginate(session, query) #session.execute(query)
+
+        items = []
+
+        for row in results.items:
+
+            row_dict = {}
+            row_dict["ingredients"] = []
+
+            row_dict["item_id"] = row.item_id
+            row_dict["name"] = row.name
+            row_dict["price"] = row.price
+            row_dict["description"] = row.description
+            row_dict["category"] = row.category
+            row_dict["picture_link"] = row.picture_link
+
+            for ingredient in session.execute(select(ItemIngredientModel.ingredient_id, ItemIngredientModel.quantity).where(row.item_id == ItemIngredientModel.item_id)).all():
+
+                ingredient_row = session.execute(select(
+                    IngredientModel.name,
+                    IngredientModel.unit
+                ).where(IngredientModel.ingredient_id == ingredient.ingredient_id)).one()
+
+                row_dict["ingredients"].append({
+                    "name": ingredient_row[0],
+                    "unit": ingredient_row[1],
+                    "quantity": ingredient.quantity
+                })
+
+            items.append(ItemGet(**row_dict))
+
+        set_page(Page[ItemGet])
+        return api_pagiante(items)
+    else:
+        return paginate(session, select(
+            ItemModel,
+        ).order_by(ItemModel.item_id))
 
 @app.post('/inventory/items/get', tags=['inventory'])
 async def get_items(
@@ -105,7 +138,7 @@ async def ingredients_add_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
-    fields: InventoryIngredient
+    fields: IngredientCreate
 ):
     pass
 

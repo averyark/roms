@@ -58,19 +58,21 @@ def test_create_item():
         unit='ml'
     ))
     # Create the items
-    create_item(ItemCreate(
+    item_id = create_item(ItemCreate(
         price=6.3,
         name='Kopi Beng',
         picture_link='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgYbqhuVAja_fGSBITWC7qCKjCsa0jcN5_0w&s',
         description='yummy kopi mmmm',
         category='Beverage',
-    ))
+    )).item_id
     # Create ingredient-item correlation
     create_item_ingredient(IngredientItemCreate(
+        item_id=item_id,
         ingredient_id=1,
         quantity=10
     ))
     create_item_ingredient(IngredientItemCreate(
+        item_id=item_id,
         ingredient_id=2,
         quantity=200
     ))
@@ -88,4 +90,6 @@ if __name__ == '__main__':
     #test_viewall()
 
     #test_create_item()
-    print(to_dict(get_item(1)))
+    #print(to_dict(get_item(1)))
+    #print(to_dict(get_item(1)))
+    pass
