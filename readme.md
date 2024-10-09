@@ -1,5 +1,6 @@
 ## Restaurant Ordering Management Systems
 
+![CodeQL Analysis](https://github.com/averyark/roms/actions/workflows/github-code-scanning/codeql/badge.svg)
 ![Python 3.11, 3.10](https://github.com/averyark/roms/actions/workflows/python-package.yml/badge.svg)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/averyark/roms)
