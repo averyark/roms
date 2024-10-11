@@ -11,7 +11,7 @@ from fastapi_pagination import Page, set_page
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from ..database import session, to_dict
+from ..database import session, to_dict, create_item
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
 from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase
 from ..account import authenticate, validate_role
@@ -75,12 +75,20 @@ async def inventory_get(
             row_dict["category"] = row.category
             row_dict["picture_link"] = row.picture_link
 
-            for ingredient in session.execute(select(ItemIngredientModel.ingredient_id, ItemIngredientModel.quantity).where(row.item_id == ItemIngredientModel.item_id)).all():
+            for ingredient in session.execute(
+                    select(
+                        ItemIngredientModel.ingredient_id, ItemIngredientModel.quantity
+                    ).where(
+                        row.item_id == ItemIngredientModel.item_id
+                    )).all():
 
-                ingredient_row = session.execute(select(
-                    IngredientModel.name,
-                    IngredientModel.unit
-                ).where(IngredientModel.ingredient_id == ingredient.ingredient_id)).one()
+                ingredient_row = session.execute(
+                    select(
+                        IngredientModel.name,
+                        IngredientModel.unit
+                    ).where(
+                        IngredientModel.ingredient_id == ingredient.ingredient_id
+                    )).one()
 
                 row_dict["ingredients"].append({
                     "name": ingredient_row[0],
@@ -97,13 +105,6 @@ async def inventory_get(
             ItemModel,
         ).order_by(ItemModel.item_id))
 
-@app.post('/inventory/items/get', tags=['inventory'])
-async def get_items(
-    user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
-    ],
-) -> Page[Item]:
-    return paginate(session, select(ItemModel).order_by(ItemModel.item_id))
 
 @app.post('/inventory/items/add', tags=['inventory'])
 async def inventory_add_item(
@@ -112,8 +113,11 @@ async def inventory_add_item(
     ],
     fields: ItemCreate
 ):
+    'Add a new recipe and item, new ingredients should be created ahead using /inventory/ingredients/add'
+    create_item(fields)
     pass
 
+#TODO: @YandreZzz
 @app.patch('/inventory/items/update', tags=['inventory'])
 async def inventory_update_item(
     user: Annotated[
@@ -124,6 +128,7 @@ async def inventory_update_item(
 ):
     pass
 
+#TODO: @YandreZzz
 @app.delete('/inventory/items/delete', tags=['inventory'])
 async def inventory_delete_item(
     user: Annotated[
@@ -133,6 +138,7 @@ async def inventory_delete_item(
 ):
     pass
 
+#TODO: @YandreZzz
 @app.post('/inventory/ingredients/add', tags=['inventory'])
 async def ingredients_add_item(
     user: Annotated[
@@ -142,6 +148,7 @@ async def ingredients_add_item(
 ):
     pass
 
+#TODO: @YandreZzz
 @app.patch('/inventory/ingredients/update', tags=['inventory'])
 async def ingredients_update_item(
     user: Annotated[
@@ -152,8 +159,9 @@ async def ingredients_update_item(
 ):
     pass
 
+#TODO: @YandreZzz
 @app.delete('/inventory/ingredients/delete', tags=['inventory'])
-async def ingredientsy_delete_item(
+async def ingredients_delete_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
