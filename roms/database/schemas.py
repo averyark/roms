@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator, SecretStr
-from typing import List, Annotated, Literal, Optional, Never
+from typing import List, Annotated, Literal, Optional
 from .session import session
 from .models import SessionTokenModel, UserModel
 from datetime import datetime
