@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base, class_mapper
 
@@ -38,21 +38,45 @@ def create_item_ingredient(item_ingredient: IngredientItemCreate):
     return db_item_ingredient
 
 def create_item(item: ItemCreate):
-    if session.query(ItemModel).filter(ItemModel.name == item.name).one_or_none():
-        raise LookupError("This item already exist")
-    
-    db_item = ItemModel(
-        price=item.price,
-        name=item.name,
-        picture_link=item.picture_link,
-        description=item.description,
-        category=item.category,
-    )
+    in_db_item = session.query(ItemModel).filter(ItemModel.name == item.name).one_or_none()
 
-    session.add(db_item)
-    session.commit()
-    session.refresh(db_item)
-    return db_item
+    # check if the item ingredients is in the itemingredient db table
+    if in_db_item is None:
+        # create the item because it doesn't exist
+        in_db_item = ItemModel(
+            price=item.price,
+            name=item.name,
+            picture_link=item.picture_link,
+            description=item.description,
+            category=item.category,
+        )
+        session.add(in_db_item)
+        session.commit()
+        session.refresh(in_db_item)
+
+    for ingredient_item in item.ingredients:
+        in_db_ingredient_item = session.query(ItemIngredientModel).filter(
+            and_(
+                ItemIngredientModel.item_id == in_db_item.item_id,
+                ItemIngredientModel.ingredient_id == ingredient_item.ingredient_id
+            )
+        ).one_or_none()
+
+        # continue if the ingredient already exist
+        if in_db_ingredient_item:
+            continue
+
+        db_ingredient_item = ItemIngredientModel(
+            ingredient_id=ingredient_item.ingredient_id,
+            item_id = in_db_item.item_id,
+            quantity=ingredient_item.quantity
+        )
+
+        session.add(db_ingredient_item)
+        session.commit()
+        session.refresh(db_ingredient_item)
+
+    return in_db_item
 
 def create_ingredient(ingredient: IngredientCreate):
     db_ingredient = IngredientModel(

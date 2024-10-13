@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator
+from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator, SecretStr
 from typing import List, Annotated, Literal, Optional
 from .session import session
 from .models import SessionTokenModel, UserModel
@@ -110,8 +110,13 @@ class Ingredient(IngredientBase):
     pass
 
 class IngredientItemBase(BaseModel):
-    ingredient_id: int
     item_id: int
+    ingredient_id: int
+    quantity: float
+
+class IngredientItemCreateNoItemIdKnowledge(BaseModel):
+    # Exclude
+    ingredient_id: int
     quantity: float
 
 class IngredientItemCreate(IngredientItemBase):
@@ -119,6 +124,8 @@ class IngredientItemCreate(IngredientItemBase):
 
 class IngredientItem(IngredientItemBase):
     pass
+
+
 
 class ItemBase(BaseModel):
     price: float
@@ -128,6 +135,7 @@ class ItemBase(BaseModel):
     category: Literal['All', 'Beverage', 'Rice', 'Noodle', 'Snacks']
 
 class ItemCreate(ItemBase):
+    ingredients: List[IngredientItemCreateNoItemIdKnowledge]
     pass
 
 class Item(ItemBase):

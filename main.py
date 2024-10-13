@@ -84,12 +84,10 @@ if __name__ == '__main__':
     #session.query(UserModel).delete()
     #session.commit()
 
-    #test_signup_manager()
-    #test_signup()
+    test_signup_manager()
+    test_signup()
 
     #test_viewall()
 
-    #test_create_item()
-    #print(to_dict(get_item(1)))
-    #print(to_dict(get_item(1)))
+    test_create_item()
     pass
