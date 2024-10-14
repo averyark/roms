@@ -5,29 +5,29 @@
 from typing import Annotated, Literal, Optional, List
 from fastapi import Depends
 from pydantic import BaseModel
+from fastapi import HTTPException
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as api_pagiante
 from fastapi_pagination import Page, set_page
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from ..database import session, to_dict, create_item
+
+from ..database import session, to_dict, create_item, create_ingredient, get_item
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
 from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase
 from ..account import authenticate, validate_role
 from ..api import app
 from ..user import User
-
 from fastapi_pagination.utils import disable_installed_extensions_check
 disable_installed_extensions_check()
 
 class InventoryItemUpdate(BaseModel):
-    item_id: Optional[int] = None
     price: Optional[float] = None
-    name: Optional[str] = None
-    picture_link: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
+    name: str = None
+    picture_link: str = None
+    description: str = None
+    category: str = None
 
 class ItemGetIngredient(BaseModel):
     name: str
@@ -120,13 +120,28 @@ async def inventory_add_item(
 #TODO: @YandreZzz
 @app.patch('/inventory/items/update', tags=['inventory'])
 async def inventory_update_item(
-    user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
-    ],
+    user: Annotated[User, Depends(validate_role(roles=['Manager']))], 
     item_id: int,
     update_fields: InventoryItemUpdate
 ):
-    pass
+    item = get_item(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    if update_fields.name:
+        item.name = update_fields.name
+    if update_fields.price:
+        item.price = update_fields.price
+    if update_fields.description:
+        item.description = update_fields.description
+    if update_fields.category:
+        item.category = update_fields.category
+    if update_fields.picture_link:
+        item.picture_link = update_fields.picture_link
+
+    session.commit()
+    session.refresh(item)
+    return {"msg": "Item updated successfully"}
 
 #TODO: @YandreZzz
 @app.delete('/inventory/items/delete', tags=['inventory'])
@@ -134,9 +149,22 @@ async def inventory_delete_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
-    ingredient_id: int
+    item_id: int
 ):
-    pass
+    item = get_item(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    session.delete(item)
+    session.commit()
+    # delete_item(item_id)
+    # need def delete_item in db
+    
+    return {"msg": f"Item with ID {item_id} deleted successfully"}
+
+#Helper function for deleting an item
+#async def delete_item(item_id: int):
+    #await database.delete_item(item_id)
 
 #TODO: @YandreZzz
 @app.post('/inventory/ingredients/add', tags=['inventory'])
@@ -146,7 +174,11 @@ async def ingredients_add_item(
     ],
     fields: IngredientCreate
 ):
-    pass
+    try:
+        new_ingredient = create_ingredient(fields)
+        return {"msg": "Ingredient added successfully", "ingredient": new_ingredient}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to add ingredient: {str(e)}")
 
 #TODO: @YandreZzz
 @app.patch('/inventory/ingredients/update', tags=['inventory'])
