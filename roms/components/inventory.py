@@ -8,10 +8,10 @@ from pydantic import BaseModel
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as api_pagiante
 from fastapi_pagination import Page, set_page
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import joinedload
 
-from ..database import session, to_dict, create_item
+from ..database import session, to_dict
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
 from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase
 from ..account import authenticate, validate_role
@@ -19,19 +19,25 @@ from ..api import app
 from ..user import User
 
 from fastapi_pagination.utils import disable_installed_extensions_check
+
 disable_installed_extensions_check()
 
 class InventoryItemUpdate(BaseModel):
-    item_id: Optional[int] = None
     price: Optional[float] = None
     name: Optional[str] = None
     picture_link: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{}]
+        }
+    }
+
 class ItemGetIngredient(BaseModel):
     name: str
-    quantity: float
+    quantity: int
     unit: str
 
 class ItemGet(ItemBase):
@@ -40,6 +46,77 @@ class ItemGet(ItemBase):
 
 class ItemPage(ItemBase):
     item_id: int
+
+def create_item_ingredient(item_ingredient: IngredientItemCreate):
+    db_item_ingredient = ItemIngredientModel(
+        item_id=item_ingredient.item_id,
+        ingredient_id=item_ingredient.ingredient_id,
+        quantity=item_ingredient.quantity
+    )
+    session.add(db_item_ingredient)
+    session.commit()
+    session.refresh(db_item_ingredient)
+    return db_item_ingredient
+
+def create_item(item: ItemCreate):
+    in_db_item = session.query(ItemModel).filter(ItemModel.name == item.name).one_or_none()
+
+
+    # check if the item ingredients is in the itemingredient db table
+    if in_db_item is None:
+        # create the item because it doesn't exist
+        in_db_item = ItemModel(
+            price=item.price,
+            name=item.name,
+            picture_link=item.picture_link,
+            description=item.description,
+            category=item.category,
+        )
+        session.add(in_db_item)
+        session.commit()
+        session.refresh(in_db_item)
+
+    for ingredient_item in item.ingredients:
+        in_db_ingredient_item = session.query(ItemIngredientModel).filter(
+            and_(
+                ItemIngredientModel.item_id == in_db_item.item_id,
+                ItemIngredientModel.ingredient_id == ingredient_item.ingredient_id
+            )
+        ).one_or_none()
+
+        # continue if the ingredient already exist
+        if in_db_ingredient_item:
+            continue
+
+        db_ingredient_item = ItemIngredientModel(
+            ingredient_id=ingredient_item.ingredient_id,
+            item_id = in_db_item.item_id,
+            quantity=ingredient_item.quantity
+        )
+
+        session.add(db_ingredient_item)
+        session.commit()
+        session.refresh(db_ingredient_item)
+
+    return in_db_item
+
+def create_ingredient(ingredient: IngredientCreate):
+    db_ingredient = IngredientModel(
+        name=ingredient.name,
+        stock_quantity=ingredient.stock_quantity,
+        unit=ingredient.unit
+    )
+    session.add(db_ingredient)
+    session.commit()
+    session.refresh(db_ingredient)
+    return db_ingredient
+
+def get_item(item_id: int):
+    return session.query(ItemModel).filter(ItemModel.item_id == item_id).one()
+
+def get_ingredient(ingredient_id: int):
+    return session.query(IngredientModel).filter(IngredientModel.ingredient_id == ingredient_id).one()
+
 
 @app.post('/inventory/items/get', tags=['inventory'])
 async def inventory_get(

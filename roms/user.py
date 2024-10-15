@@ -4,7 +4,8 @@
 
 from icecream import ic
 import pendulum
-from .database import UserData, get_user_data_in_dict
+from sqlalchemy.exc import NoResultFound
+from .database import session, UserModel, UserData
 
 userPermissionRanks = {
     'Manager': 255,
@@ -35,6 +36,22 @@ class User(UserData):
 
     def get_birthday_object(self):
        return pendulum.from_format(self.birthday, 'YYYY-MM-DD')
+
+def get_user_data_in_dict(user_id: int) -> dict:
+    try:
+        user = session.query(UserModel).filter(UserModel.user_id == user_id).one()
+        return {
+            'user_id': user_id,
+            'session_tokens': [token.token for token in user.session_tokens],
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'birthday': user.birthday,
+            'permission_level': user.permission_level,
+            'hashed_password': user.hashed_password
+        }
+    except NoResultFound:
+        return None
 
 def get_user(user_id: int) -> User:
     user_data = get_user_data_in_dict(user_id)
