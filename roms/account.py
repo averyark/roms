@@ -5,11 +5,12 @@
 from typing import Annotated, Optional
 from asyncio import run_coroutine_threadsafe
 
-from .credentials import SECRET_KEY, USE_ALGORITHM, pwd_context
+from .credentials import SECRET_KEY, USE_ALGORITHM, pwd_context, JWT_EXPIRATION_MINUTES
 from .api import app
-from .database import session, create_session_token, create_user, UserModel, UserCreate, UserBase
+from .database import session, UserModel, UserCreate, UserBase, SessionTokenModel
 from .user import get_user, User
 
+from datetime import datetime, timezone, timedelta
 from jwt import encode as jwt_encode, decode as jwt_decode, ExpiredSignatureError
 from pydantic import BaseModel
 from fastapi import HTTPException, status, Depends
@@ -76,6 +77,36 @@ class UserInfoUpdate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+def create_session_token(user_id: int) -> str:
+    # Generate JWT token
+    expiration = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRATION_MINUTES)
+    token = jwt_encode({
+        'sub': user_id,
+        'exp': expiration
+    }, SECRET_KEY, algorithm=USE_ALGORITHM)
+
+    # Store the token in the database
+    session_token = SessionTokenModel(user_id=user_id, token=token)
+    session.add(session_token)
+    session.commit()
+
+    return token
+
+def create_user(user: UserCreate):
+    hashed_password = pwd_context.hash(user.password)
+    db_user = UserModel(
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        birthday=user.birthday,
+        hashed_password=hashed_password,
+        permission_level=user.permission_level
+    )
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+    return db_user
 
 @app.get(path='/account/get_token', tags=['account'])
 async def login(email: str, password: str) -> Token:
