@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 
-from ..database import session, to_dict, create_item, create_ingredient, get_item
+from ..database import session, to_dict, create_item, create_ingredient, get_item, get_ingredient
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
 from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase
 from ..account import authenticate, validate_role
@@ -24,10 +24,15 @@ disable_installed_extensions_check()
 
 class InventoryItemUpdate(BaseModel):
     price: Optional[float] = None
-    name: str = None
-    picture_link: str = None
-    description: str = None
-    category: str = None
+    name: Optional[str] = None
+    picture_link: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+
+class InventoryIngredientUpdate(BaseModel):
+    name: Optional[str] = None
+    stock_quantity: Optional[float] = None
+    unit: Optional[str] = None
 
 class ItemGetIngredient(BaseModel):
     name: str
@@ -117,7 +122,7 @@ async def inventory_add_item(
     create_item(fields)
     pass
 
-#TODO: @YandreZzz
+#TODO: @YandreZzz done and tested
 @app.patch('/inventory/items/update', tags=['inventory'])
 async def inventory_update_item(
     user: Annotated[User, Depends(validate_role(roles=['Manager']))], 
@@ -143,7 +148,7 @@ async def inventory_update_item(
     session.refresh(item)
     return {"msg": "Item updated successfully"}
 
-#TODO: @YandreZzz
+#TODO: @YandreZzz done and tested
 @app.delete('/inventory/items/delete', tags=['inventory'])
 async def inventory_delete_item(
     user: Annotated[
@@ -157,16 +162,14 @@ async def inventory_delete_item(
 
     session.delete(item)
     session.commit()
-    # delete_item(item_id)
-    # need def delete_item in db
-    
+
     return {"msg": f"Item with ID {item_id} deleted successfully"}
 
 #Helper function for deleting an item
 #async def delete_item(item_id: int):
     #await database.delete_item(item_id)
 
-#TODO: @YandreZzz
+#TODO: @YandreZzz Done and tested
 @app.post('/inventory/ingredients/add', tags=['inventory'])
 async def ingredients_add_item(
     user: Annotated[
@@ -180,18 +183,32 @@ async def ingredients_add_item(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to add ingredient: {str(e)}")
 
-#TODO: @YandreZzz
+#TODO: @YandreZzz Done and tested
 @app.patch('/inventory/ingredients/update', tags=['inventory'])
 async def ingredients_update_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
     ingredient_id: int,
-    update_fields: InventoryItemUpdate
+    update_fields: InventoryIngredientUpdate
 ):
-    pass
+    ingredient = get_ingredient(ingredient_id)
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
 
-#TODO: @YandreZzz
+    if update_fields.name:
+        ingredient.name = update_fields.name
+    if update_fields.stock_quantity:
+        ingredient.stock_quantity = update_fields.stock_quantity
+    if update_fields.unit:
+        ingredient.unit = update_fields.unit
+
+    session.commit()
+    session.refresh(ingredient)
+    return {"msg": "Ingredient updated successfully"}
+
+
+#TODO: @YandreZzz Done and tested
 @app.delete('/inventory/ingredients/delete', tags=['inventory'])
 async def ingredients_delete_item(
     user: Annotated[
@@ -199,4 +216,11 @@ async def ingredients_delete_item(
     ],
     ingredient_id: int
 ):
-    pass
+    ingredient = get_ingredient(ingredient_id)
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
+
+    session.delete(ingredient)
+    session.commit()
+    
+    return {"msg": f"Item with ID {ingredient_id} deleted successfully"}
