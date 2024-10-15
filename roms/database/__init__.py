@@ -48,7 +48,7 @@ def create_item(item: ItemCreate):
             name=item.name,
             picture_link=item.picture_link,
             description=item.description,
-            category=item.category,
+            category=item.category
         )
         session.add(in_db_item)
         session.commit()

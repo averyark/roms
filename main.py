@@ -92,5 +92,5 @@ if __name__ == '__main__':
 
     #test_viewall()
 
-    test_create_item()
+    #test_create_item()
     pass
