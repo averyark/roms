@@ -41,6 +41,12 @@ class InventoryIngredientUpdate(BaseModel):
     stock_quantity: Optional[float] = None
     unit: Optional[str] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{}]
+        }
+    }
+
 class ItemGetIngredient(BaseModel):
     name: str
     quantity: int
@@ -203,7 +209,7 @@ async def inventory_add_item(
 #TODO: @YandreZzz done and tested
 @app.patch('/inventory/items/update', tags=['inventory'])
 async def inventory_update_item(
-    user: Annotated[User, Depends(validate_role(roles=['Manager']))], 
+    user: Annotated[User, Depends(validate_role(roles=['Manager']))],
     item_id: int,
     update_fields: InventoryItemUpdate
 ):
@@ -300,5 +306,5 @@ async def ingredients_delete_item(
 
     session.delete(ingredient)
     session.commit()
-    
+
     return {"msg": f"Item with ID {ingredient_id} deleted successfully"}

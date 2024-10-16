@@ -1,7 +1,9 @@
 ## Restaurant Ordering Management Systems
 
 ![CodeQL Analysis](https://github.com/averyark/roms/actions/workflows/github-code-scanning/codeql/badge.svg)
-![Python 3.11, 3.10](https://github.com/averyark/roms/actions/workflows/python-package.yml/badge.svg)
+![tests ubuntu](https://github.com/averyark/roms/actions/workflows/tests-ubuntu.yml/badge.svg)
+![tests macos](https://github.com/averyark/roms/actions/workflows/tests-macos.yml/badge.svg)
+![tests windows](https://github.com/averyark/roms/actions/workflows/tests-windows.yml/badge.svg)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/averyark/roms)
 
@@ -64,12 +66,19 @@ Manager|manager@roms.com|manager%password122
 > The current SECRET_KEY is exposed, so it is not recommended that any real passwords are used for testing. Replace the SECRET_KEY in `/roms/credentials` with your own key if you're using it for prod. You can generate your own SECRET_KEY using by running `openssl rand -hex 32` in terminal.
 
 ### Account
-Goal|API
--|-
-Login / GetToken | [account/get_token](http://127.0.0.1:8000/docs#/account/login_account_get_token_get)
-Logout / ExpireToken | [account/expire_token](http://127.0.0.1:8000/docs#/account/logout_account_expire_token_delete)
-Signup | [account/signup](http://127.0.0.1:8000/docs#/account/signup_account_signup_post)
-
+API|Goal|Tag
+-|-|-
+[account/get_token](http://127.0.0.1:8000/docs#/account/login_account_get_token_get) | Login or retrieve a user session token for authentication | Account
+[account/expire_token](http://127.0.0.1:8000/docs#/account/logout_account_expire_token_delete) | Logout or expire the current session token | Account
+[account/signup](http://127.0.0.1:8000/docs#//signup_account_signup_post) | Creating a new account | Account
+[inventory/items/add](http://127.0.0.1:8000/docs#/inventory/inventory_add_item_inventory_items_add_post) | Add a new recipe or item into the inventory | Inventory
+[inventory/ingredients/add](http://127.0.0.1:8000/docs#/inventory/ingredients_add_item_inventory_ingredients_add_post) | Add a new ingredient into the inventory | Inventory
+[inventory/items/remove](http://127.0.0.1:8000/docs#/inventory/inventory_delete_item_inventory_items_delete_delete) | Remove an item from the inventory | Inventory
+[inventory/ingredients/remove](http://127.0.0.1:8000/docs#/inventory/ingredients_delete_item_inventory_ingredients_delete_delete) | Remove an ingredient from the inventory | Inventory
+[inventory/items/update](http://127.0.0.1:8000/docs#/inventory/inventory_update_item_inventory_items_update_patch) | Update item details | Inventory
+[inventory/ingredient/update](http://127.0.0.1:8000/docs#/inventory/ingredients_update_item_inventory_ingredients_update_patch) | Update ingredient details | Inventory
+[order/get](http://127.0.0.1:8000/docs#/order/order_get_order_get__post) | Fetch orders or order history | Order
+[order/add](http://127.0.0.1:8000/docs#/order/order_add_order_add__post) | Create a new order | Order
 
 
 #### Manager
@@ -82,13 +91,14 @@ Signup | [account/signup](http://127.0.0.1:8000/docs#/account/signup_account_sig
 5. Customer Feedback: Monitor and review customer feedback to improve services.
 
 #### Customer
-1. Customer Account Management: Create, manage, login and update personal
+1. Customer Account Management: Create, manage, login and update personal `/account/expire_token`, `/account/get_token`, `/account/signup`
 information.
 2. Product Browsing: Customers can explore a variety menu items available for
-purchase.
+purchase. `/inventory/items/get`
 3. Cart Management: Customers can add, remove, or modify items in their shopping
-cart.
+cart. `/order/add`
 4. Order Tracking: Monitor the status of placed orders.
+    - APIs: `/order/get`
 5. Dishes Review: Customers can share feedback and suggestions about purchased
 dishes.
 
