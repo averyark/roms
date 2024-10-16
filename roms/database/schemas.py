@@ -153,6 +153,7 @@ class OrderItemCreate(OrderItemBase):
     pass
 
 class OrderItem(OrderItemBase):
+    order_item_id: int
     order_id: int
     order_status: Literal["Ordered", "Preparing", "Serving", "Served"]
     #order: Optional[Order] = None

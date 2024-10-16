@@ -2,8 +2,8 @@
 # @creation_date: 01/10/2024
 # @authors: averyark
 
-from typing import Annotated, Literal, Optional, List
-from fastapi import Depends
+from typing import Annotated, Literal, Optional, List, TypeVar
+from fastapi import Depends, Query
 from pydantic import BaseModel
 from fastapi import HTTPException
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -11,11 +11,12 @@ from fastapi_pagination import paginate as api_pagiante
 from fastapi_pagination import Page, set_page
 from sqlalchemy import select, and_
 from sqlalchemy.orm import joinedload
+from fastapi_pagination.customization import CustomizedPage, UseParamsFields, UseIncludeTotal
 
 from ..database import session, to_dict
 
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
-from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase
+from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase, IngredientItemCreateNoItemIdKnowledge
 from ..account import authenticate, validate_role
 from ..api import app
 from ..user import User
@@ -73,7 +74,6 @@ def create_item_ingredient(item_ingredient: IngredientItemCreate):
 def create_item(item: ItemCreate):
     in_db_item = session.query(ItemModel).filter(ItemModel.name == item.name).one_or_none()
 
-
     # check if the item ingredients is in the itemingredient db table
     if in_db_item is None:
         # create the item because it doesn't exist
@@ -113,6 +113,13 @@ def create_item(item: ItemCreate):
     return in_db_item
 
 def create_ingredient(ingredient: IngredientCreate):
+    in_db_ingredient = session.query(IngredientModel).filter(
+        IngredientModel.name == ingredient.name
+    ).one_or_none()
+
+    if in_db_ingredient:
+        return
+
     db_ingredient = IngredientModel(
         name=ingredient.name,
         stock_quantity=ingredient.stock_quantity,
@@ -129,30 +136,35 @@ def get_item(item_id: int):
 def get_ingredient(ingredient_id: int):
     return session.query(IngredientModel).filter(IngredientModel.ingredient_id == ingredient_id).one()
 
+T = TypeVar("T")
+
+CustomPage = CustomizedPage[
+    Page[T],
+    UseIncludeTotal(False),
+]
 
 @app.post('/inventory/items/get', tags=['inventory'])
 async def inventory_get(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
     ],
-    filter: str = None,
-) -> Page[ItemGet]:
-    if user.get_role() in ['Manager', 'Chef']:
-        query = select(
-            ItemModel.item_id,
-            ItemModel.name,
-            ItemModel.price,
-            ItemModel.description,
-            ItemModel.category,
-            ItemModel.picture_link,
-        ).order_by(ItemModel.item_id)
+    search_keyword: str = None
+) -> List[ItemGet]:
 
-        set_page(Page[ItemPage])
-        results = paginate(session, query) #session.execute(query)
+    if user.get_role() in ['Manager', 'Chef']:
+        if search_keyword:
+            search_keyword = f"%{search_keyword}%"
+            query = session.query(ItemModel).where(
+                ItemModel.name.ilike(search_keyword) |
+                ItemModel.description.ilike(search_keyword) |
+                ItemModel.category.ilike(search_keyword)
+            )
+        else:
+            query = session.query(ItemModel)
 
         items = []
 
-        for row in results.items:
+        for row in query.all():
 
             row_dict = {}
             row_dict["ingredients"] = []
@@ -169,7 +181,7 @@ async def inventory_get(
                         ItemIngredientModel.ingredient_id, ItemIngredientModel.quantity
                     ).where(
                         row.item_id == ItemIngredientModel.item_id
-                    )).all():
+                    )) .all():
 
                 ingredient_row = session.execute(
                     select(
@@ -187,12 +199,22 @@ async def inventory_get(
 
             items.append(ItemGet(**row_dict))
 
-        set_page(Page[ItemGet])
-        return api_pagiante(items)
+        return items
     else:
-        return paginate(session, select(
-            ItemModel,
-        ).order_by(ItemModel.item_id))
+        items = []
+
+        for item in session.query(ItemModel).order_by(ItemModel.item_id).all():
+            items.append(ItemGet(
+                item_id = item.item_id,
+                name = item.name,
+                price = item.price,
+                description = item.description,
+                category = item.category,
+                picture_link = item.picture_link
+            ))
+
+        return items
+
 
 
 @app.post('/inventory/items/add', tags=['inventory'])

@@ -70,7 +70,7 @@ API|Goal|Tag
 -|-|-
 [account/get_token](http://127.0.0.1:8000/docs#/account/login_account_get_token_get) | Login or retrieve a user session token for authentication | Account
 [account/expire_token](http://127.0.0.1:8000/docs#/account/logout_account_expire_token_delete) | Logout or expire the current session token | Account
-[account/signup](http://127.0.0.1:8000/docs#//signup_account_signup_post) | Creating a new account | Account
+[account/signup](http://127.0.0.1:8000/docs#/account/signup_account_signup_post) | Creating a new account | Account
 [inventory/items/add](http://127.0.0.1:8000/docs#/inventory/inventory_add_item_inventory_items_add_post) | Add a new recipe or item into the inventory | Inventory
 [inventory/ingredients/add](http://127.0.0.1:8000/docs#/inventory/ingredients_add_item_inventory_ingredients_add_post) | Add a new ingredient into the inventory | Inventory
 [inventory/items/remove](http://127.0.0.1:8000/docs#/inventory/inventory_delete_item_inventory_items_delete_delete) | Remove an item from the inventory | Inventory
