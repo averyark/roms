@@ -79,12 +79,16 @@ API|Goal|Tag
 [inventory/ingredient/update](http://127.0.0.1:8000/docs#/inventory/ingredients_update_item_inventory_ingredients_update_patch) | Update ingredient details | Inventory
 [order/get](http://127.0.0.1:8000/docs#/order/order_get_order_get__post) | Fetch orders or order history | Order
 [order/add](http://127.0.0.1:8000/docs#/order/order_add_order_add__post) | Create a new order | Order
-
+[order/delete](http://127.0.0.1:8000/docs#/order/order_delete_order_delete_delete) | Delete order | Order
+[order/item/delete](http://127.0.0.1:8000/docs#/order/order_item_delete_order_item_delete_delete) | Create item of a order | Order
+[order/item/edit](http://127.0.0.1:8000/docs#/order/order_item_edit_order_item_edit_patch) | Create item edit | Order
+[order/item/edit_status](http://127.0.0.1:8000/docs#/order/order_item_edit_status_order_item_edit_status_patch) | Create item status | Order
 
 #### Manager
 1. System Administration: Manage user accounts and credentials.
     - APIs: `/account/add/`, `/account/edit/credentials/`, `/account/edit/user_info/`, `/account/edit/delete/`
 2. Order Management: Oversee order details, including viewing and updating order status.
+    - APIs: `/order/add/`, `/order/get/`, `/order/delete`, `/order/item/delete`, `/order/item/edit`, `/order/item/edit_status`
 3. Financial Management: Track income, expenses, and profitability.
 4. Inventory Control: Maintain product inventory by adding, updating, or removing items (product and ingredients) from the system.
    - APIs: `/inventory/ingredients/add`, `/inventory/ingredients/delete`, `/inventory/ingredients/update`, `/items/add`, `/inventory/items/delete` and `/inventory/items/update`
