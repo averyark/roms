@@ -1,10 +1,7 @@
-from sqlalchemy import create_engine, and_
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import relationship, sessionmaker, declarative_base, class_mapper
+from sqlalchemy.orm import class_mapper
 
 from .models import *
-from .schemas import UserBase, UserData, UserCreate, IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate
-from .models import UserModel, SessionTokenModel, ItemModel, IngredientModel, ItemIngredientModel
+from .schemas import *
 from .session import session
 from ..credentials import pwd_context, SECRET_KEY, USE_ALGORITHM, JWT_EXPIRATION_MINUTES
 
