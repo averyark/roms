@@ -22,6 +22,17 @@ from ..account import authenticate, validate_role
 from ..api import app
 from ..user import User
 
+class OrderItemUpdate(BaseModel):
+    item_id: Optional[int] = None
+    quantity: Optional[int] = None
+    remark: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{}]
+        }
+    }
+
 def create_order_item(order: OrderItemCreate, order_id):
     db_order_item = OrderItemModel(
         order_id=order_id,
@@ -66,7 +77,7 @@ async def order_get(
         User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
     ],
     user_id: int = None
-):
+) -> List[Order]:
     '''
     Retrieve all orders belonging to the user that is currently authenticated if user_id is not specified. Otherwise, the orders for the user of {user_id} is returned
     '''
@@ -75,8 +86,9 @@ async def order_get(
         return session.query(OrderModel).filter(
         OrderModel.user_id == user_id)
     else:
-        return session.query(OrderModel).filter(
+        session.query(OrderModel).filter(
         OrderModel.user_id == user.user_id)
+        return
 
 @app.post('/order/add/', tags=['order'])
 async def order_add(
@@ -105,3 +117,93 @@ async def order_add(
         ))
 
     return {"message": "Order created successfully"}
+
+@app.delete('/order/item/delete', tags=['order'])
+async def order_item_delete(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    order_item_id: int
+):
+    '''
+    Remove order item
+    '''
+
+    session.query(OrderItemModel).filter(
+        OrderItemModel.order_item_id == order_item_id
+    ).delete()
+    session.commit()
+
+    return {"message": "Order item deleted successfully"}
+
+@app.delete('/order/delete', tags=['order'])
+async def order_delete(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    order_id: int
+):
+    '''
+    Remove order
+    '''
+
+    session.query(OrderModel).filter(
+        OrderItemModel.order_id == order_id
+    ).delete()
+    session.commit()
+
+    return {"message": "Order deleted successfully"}
+
+@app.patch('/order/item/edit', tags=['order'])
+async def order_item_edit(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    order_item_id: int,
+    update_details: OrderItemUpdate
+):
+    '''
+    Update order item details
+    '''
+
+    in_db_order_item = session.query(OrderItemModel).filter(
+        OrderItemModel.order_item_id == order_item_id
+    ).one_or_none()
+
+    if not in_db_order_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This order item does not exist")
+
+    for key, value in update_details.model_dump().items():
+        if key is None or value is None:
+            continue
+        
+        setattr(in_db_order_item, key, value)
+
+    session.commit()
+    session.refresh(in_db_order_item)
+
+    return {"message": "Order item edited successfully"}
+
+@app.patch('/order/item/edit_status', tags=['order'])
+async def order_item_edit_status(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager', "Chef", "Cashier"]))
+    ],
+    item_order_id: int,
+    new_status: Literal["Ordered", "Preparing", "Serving", "Served"]
+):
+    '''
+    Edit item status
+    '''
+
+    in_db_order_item = session.query(OrderItemModel).filter(
+        OrderItemModel.order_item_id == item_order_id
+    ).one_or_none()
+
+    if not in_db_order_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This order item does not exist")
+
+    in_db_order_item.order_status = new_status
+    session.commit()
+
+    return {"message": "Order item status updated successfully"}
