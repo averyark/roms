@@ -3,9 +3,12 @@
 # @authors: averyark
 
 from asyncio import run_coroutine_threadsafe
+from sqlalchemy import text
+
 from roms.account import login, signup, create_account, get_userid_from_email, swagger_login
 from roms.database.models import UserModel, IngredientModel, ItemModel, ItemIngredientModel
 
+import roms.components.order as order
 from roms.database import session
 import roms.account as account
 import roms.components.inventory as inventory
@@ -87,10 +90,12 @@ if __name__ == '__main__':
     #session.query(UserModel).delete()
     #session.commit()
 
-    test_signup_manager()
-    test_signup()
+    #test_signup_manager()
+    #test_signup()
+
+    #order.delete_all_orders()
 
     #test_viewall()
 
-    test_create_item()
+    #test_create_item()
     pass

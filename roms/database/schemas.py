@@ -115,7 +115,6 @@ class IngredientItemBase(BaseModel):
     quantity: float
 
 class IngredientItemCreateNoItemIdKnowledge(BaseModel):
-    # Exclude
     ingredient_id: int
     quantity: float
 
@@ -124,8 +123,6 @@ class IngredientItemCreate(IngredientItemBase):
 
 class IngredientItem(IngredientItemBase):
     pass
-
-
 
 class ItemBase(BaseModel):
     price: float
@@ -142,6 +139,41 @@ class Item(ItemBase):
     item_id: int
 
     ingredients: Optional[List[IngredientItem]] = Field(default_factory=list)
+
+    class ConfigDict:
+        from_attributes = True
+
+class OrderItemBase(BaseModel):
+    item_id: int
+    quantity: int
+    remark: Optional[str]
+    pass
+
+class OrderItemCreate(OrderItemBase):
+    pass
+
+class OrderItem(OrderItemBase):
+    order_id: int
+    order_status: Literal["Ordered", "Preparing", "Serving", "Served"]
+    #order: Optional[Order] = None
+
+    class ConfigDict:
+        from_attributes = True
+
+class OrderBase(BaseModel):
+    user_id: int
+    pass
+
+class OrderCreate(OrderBase):
+    orders: List[OrderItemCreate]
+
+class OrderCreateNoUserIdKnowledge(BaseModel):
+    orders: List[OrderItemCreate]
+
+class Order(OrderBase):
+    order_id: int
+    user_id: int
+    orders: Optional[List[OrderItem]] = Field(default_factory=list)
 
     class ConfigDict:
         from_attributes = True
