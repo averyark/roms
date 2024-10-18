@@ -161,8 +161,11 @@ async def inventory_add_item(
     fields: ItemCreate
 ):
     'Add a new recipe and item, new ingredients should be created ahead using /inventory/ingredients/add'
-    create_item(fields)
-    pass
+    try:
+        new_item = create_item(fields)
+        return {"msg": "Item added successfully", "item": new_item}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to add Item: {str(e)}")
 
 #TODO: @YandreZzz done and tested
 @app.patch('/inventory/items/edit', tags=['inventory'])
@@ -177,7 +180,7 @@ async def inventory_edit_item(
 ):
     item = get_item(item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     if name:
         item.name = name
@@ -204,7 +207,7 @@ async def inventory_delete_item(
 ):
     item = get_item(item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     session.delete(item)
     session.commit()
@@ -244,7 +247,7 @@ async def ingredients_add_item(
         new_ingredient = create_ingredient(fields)
         return {"msg": "Ingredient added successfully", "ingredient": new_ingredient}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to add ingredient: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_status.HTTP_400_BAD_REQUEST_BAD_REQUEST, detail=f"Failed to add ingredient: {str(e)}")
 
 #TODO: @YandreZzz Done and tested
 @app.patch('/inventory/ingredients/edit', tags=['inventory'])
@@ -259,7 +262,7 @@ async def ingredients_edit_item(
 ):
     ingredient = get_ingredient(ingredient_id)
     if not ingredient:
-        raise HTTPException(status_code=404, detail="Ingredient not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
 
     if name:
         ingredient.name = name
@@ -282,7 +285,7 @@ async def ingredients_delete_item(
 ):
     ingredient = get_ingredient(ingredient_id)
     if not ingredient:
-        raise HTTPException(status_code=404, detail="Ingredient not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
 
     session.delete(ingredient)
     session.commit()
@@ -315,7 +318,7 @@ async def stock_get_item(
 
         stock = get_stock(stock_id)
         if not stock:
-            raise HTTPException(status_code=404, detail="Stock not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
 
         return stock
 
@@ -332,7 +335,7 @@ async def stock_add_item(
         new_stock = create_stock(fields)
         return {"msg": "Ingredient added successfully", "stock": new_stock}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to add stock: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to add stock: {str(e)}")
 
 @app.patch('/inventory/stock/edit', tags=['inventory'])
 async def stock_edit_item(
@@ -343,11 +346,11 @@ async def stock_edit_item(
     stock_batch_id: Optional[int] = None,
     ingredient_id: Optional[int] = None,
     expiry_date: Optional[date] = None,
-    status: Optional[Literal['Ready to Use', 'Open', "Used"]] = None
+    stock_status: Optional[Literal['Ready to Use', 'Open', "Used"]] = None
 ):
     stock = get_stock(stock_id)
     if not stock:
-        raise HTTPException(status_code=404, detail="Stock not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
 
     if stock_batch_id:
         stock.stock_batch_id = stock_batch_id
@@ -355,8 +358,8 @@ async def stock_edit_item(
         stock.ingredient_id = ingredient_id
     if expiry_date:
         stock.expiry_date = expiry_date
-    if status:
-        stock.status = status
+    if stock_status:
+        stock.status = stock_status
 
     session.commit()
     session.refresh(stock)
@@ -371,7 +374,7 @@ async def stock_remove_item(
 ):
     stock = get_stock(stock_id)
     if not stock:
-        raise HTTPException(status_code=404, detail="Stock not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
 
     session.delete(stock)
     session.commit()
@@ -401,7 +404,7 @@ async def stock_batch_get_item(
 
         stock_batch = get_stock_batch(stock_batch_id)
         if not stock_batch:
-            raise HTTPException(status_code=404, detail="Stock not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
 
         return stock_batch
 
@@ -418,7 +421,7 @@ async def stock_batch_add_item(
         new_stock_batch = create_stock_batch(fields)
         return {"msg": "Stock batch added successfully", "stock_batch": new_stock_batch}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to add stock batch: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_status.HTTP_400_BAD_REQUEST_BAD_REQUEST, detail=f"Failed to add stock batch: {str(e)}")
 
 @app.patch('/inventory/stock_batch/edit', tags=['inventory'])
 async def stock_batch_edit_item(
