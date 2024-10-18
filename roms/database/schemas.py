@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstrain
 from typing import List, Annotated, Literal, Optional
 from .session import session
 from .models import SessionTokenModel, UserModel
-from datetime import datetime
+from datetime import datetime, date
 import re
 
 # Pydantic Schemas
@@ -156,7 +156,8 @@ class OrderItem(OrderItemBase):
     order_item_id: int
     order_id: int
     order_status: Literal["Ordered", "Preparing", "Serving", "Served"]
-    #order: Optional[Order] = None
+
+    order: Optional['Order'] = None
 
     class ConfigDict:
         from_attributes = True
@@ -175,6 +176,40 @@ class Order(OrderBase):
     order_id: int
     user_id: int
     orders: Optional[List[OrderItem]] = Field(default_factory=list)
+
+    class ConfigDict:
+        from_attributes = True
+
+class StockBase(BaseModel):
+    stock_batch_id: int
+    ingredient_id: int
+    expiry_date: date
+    status: Literal['Ready to Use', 'Open', 'Used']
+    pass
+
+class StockCreate(StockBase):
+    stock_batch_id: int
+
+class Stock(StockBase):
+    stock_id: int
+    stock_batch_id: int
+
+    stock_batch: Optional['StockBatch']
+
+    class ConfigDict:
+        from_attributes = True
+
+class StockBatchBase(BaseModel):
+    acquisition_date: date
+    pass
+
+class StockBatchCreate(StockBatchBase):
+    pass
+
+class StockBatch(StockBatchBase):
+    stock_batch_id: int
+
+    stocks: Optional[List[Stock]] = Field(default_factory=list)
 
     class ConfigDict:
         from_attributes = True
