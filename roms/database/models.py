@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float, DATE, Enum, TIME
 from sqlalchemy.orm import relationship
 from .session import Base, session, engine
 
@@ -43,7 +43,7 @@ class ItemModel(Base):
     name = Column(String)
     picture_link = Column(String)
     description = Column(String)
-    category = Column(String) #literal(['All', 'Beverage', 'Rice', 'Noodle', 'Snacks'])
+    category = Column(Enum('All', 'Beverage', 'Rice', 'Noodle', 'Snacks'))
 
     ingredients = relationship('ItemIngredientModel',back_populates="item")
 
@@ -71,11 +71,67 @@ class OrderItemModel(Base):
     order_item_id = Column(Integer, primary_key=True)
     order_id = Column(Integer, ForeignKey('order.order_id'))
     item_id = Column(Integer, ForeignKey('item.item_id'))
+
     quantity = Column(Integer, default=1)
     remark = Column(String, nullable=True)
-    order_status = Column(String)
+    order_status = Column(Enum('Ordered', 'Preparing', 'Serving', 'Served'))
+    price = Column(String)
 
     order = relationship('OrderModel', back_populates='orders')
+
+class InventoryStockModel(Base):
+    __tablename__ = 'inventory_stock'
+
+    stock_id = Column(Integer, primary_key=True)
+    stock_batch_id = Column(Integer, ForeignKey('inventory_stock_batch.stock_batch_id'))
+    expiry_date = Column(DATE)
+    ingredient_id = Column(Integer, ForeignKey('ingredient.ingredient_id'))
+
+    status = Column(Enum('Ready to Use', 'Open', 'Used'))
+
+    stock_batch = relationship('InventoryStockBatchModel', back_populates='stocks')
+
+class InventoryStockBatchModel(Base):
+    __tablename__ = 'inventory_stock_batch'
+
+    stock_batch_id = Column(Integer, primary_key=True)
+    acquisition_date = Column(DATE)
+
+    stocks = relationship('InventoryStockModel', back_populates='stock_batch')
+
+class VoucherModel(Base):
+    __tablename__ = 'voucher'
+
+    voucher_id = Column(Integer, primary_key=True)
+    voucher_code = Column(String, nullable=False)
+    expiry_date = Column(DATE, nullable=True)
+    begin_date = Column(DATE, nullable=True)
+
+    # A voucher can have multiple requirements
+    requirements = relationship('VoucherRequirementModel', back_populates='voucher')
+
+class VoucherRequirementModel(Base):
+    __tablename__ = 'voucher_requirement'
+
+    voucher_requirement_id = Column(Integer, primary_key=True)
+    voucher_id = Column(Integer, ForeignKey('voucher.voucher_id'))
+    voucher = relationship('VoucherModel', back_populates='requirements')
+
+    # Require certain item in the receipt
+    requirement_item_id = Column(Integer, nullable=True)
+
+    # Voucher can only be used in certain time of the day
+    requirement_time = Column(TIME, nullable=True)
+
+    # Voucher can only be used with a minimum spend
+    requirement_minimum_spend = Column(Float, nullable=True)
+
+class UserVoucherModel(Base):
+    __tablename__ = 'user_voucher'
+
+    user_id = Column(Integer, primary_key=True)
+    voucher_id = Column(Integer, primary_key=True)
+    use_date = Column(DATE)
 
 # Create tables
 Base.metadata.create_all(engine)

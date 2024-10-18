@@ -22,17 +22,6 @@ from ..account import authenticate, validate_role
 from ..api import app
 from ..user import User
 
-class OrderItemUpdate(BaseModel):
-    item_id: Optional[int] = None
-    quantity: Optional[int] = None
-    remark: Optional[str] = None
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [{}]
-        }
-    }
-
 def create_order_item(order: OrderItemCreate, order_id):
     db_order_item = OrderItemModel(
         order_id=order_id,
@@ -160,7 +149,9 @@ async def order_item_edit(
         User, Depends(validate_role(roles=['Manager']))
     ],
     order_item_id: int,
-    update_details: OrderItemUpdate
+    item_id: Optional[int] = None,
+    quantity: Optional[int] = None,
+    remark: Optional[str] = None
 ):
     '''
     Update order item details
@@ -173,11 +164,12 @@ async def order_item_edit(
     if not in_db_order_item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This order item does not exist")
 
-    for key, value in update_details.model_dump().items():
-        if key is None or value is None:
-            continue
-        
-        setattr(in_db_order_item, key, value)
+    if item_id:
+        in_db_order_item.item_id = item_id
+    if quantity:
+        in_db_order_item.quantity = quantity
+    if remark:
+        in_db_order_item.remark = remark
 
     session.commit()
     session.refresh(in_db_order_item)

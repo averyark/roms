@@ -2,10 +2,11 @@
 # @creation_date: 01/10/2024
 # @authors: averyark
 
+from datetime import date, time
 from typing import Annotated, Literal, Optional, List, TypeVar
 from fastapi import Depends, Query
 from pydantic import BaseModel
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import paginate as api_pagiante
 from fastapi_pagination import Page, set_page
@@ -15,8 +16,8 @@ from fastapi_pagination.customization import CustomizedPage, UseParamsFields, Us
 
 from ..database import session, to_dict
 
-from ..database.models import ItemModel, IngredientModel, ItemIngredientModel
-from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase, IngredientItemCreateNoItemIdKnowledge
+from ..database.models import ItemModel, IngredientModel, ItemIngredientModel, InventoryStockModel, InventoryStockBatchModel
+from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase, IngredientItemCreateNoItemIdKnowledge, Stock, StockCreate, StockBatchCreate, StockBatch
 from ..account import authenticate, validate_role
 from ..api import app
 from ..user import User
@@ -24,29 +25,8 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 
 disable_installed_extensions_check()
 
-class InventoryItemUpdate(BaseModel):
-    price: Optional[float] = None
-    name: Optional[str] = None
-    picture_link: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [{}]
-        }
-    }
-
-class InventoryIngredientUpdate(BaseModel):
-    name: Optional[str] = None
-    stock_quantity: Optional[float] = None
-    unit: Optional[str] = None
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [{}]
-        }
-    }
+class ItemPage(ItemBase):
+    item_id: int
 
 class ItemGetIngredient(BaseModel):
     name: str
@@ -56,20 +36,6 @@ class ItemGetIngredient(BaseModel):
 class ItemGet(ItemBase):
     item_id: int
     ingredients: List[ItemGetIngredient] = None
-
-class ItemPage(ItemBase):
-    item_id: int
-
-def create_item_ingredient(item_ingredient: IngredientItemCreate):
-    db_item_ingredient = ItemIngredientModel(
-        item_id=item_ingredient.item_id,
-        ingredient_id=item_ingredient.ingredient_id,
-        quantity=item_ingredient.quantity
-    )
-    session.add(db_item_ingredient)
-    session.commit()
-    session.refresh(db_item_ingredient)
-    return db_item_ingredient
 
 def create_item(item: ItemCreate):
     in_db_item = session.query(ItemModel).filter(ItemModel.name == item.name).one_or_none()
@@ -112,38 +78,10 @@ def create_item(item: ItemCreate):
 
     return in_db_item
 
-def create_ingredient(ingredient: IngredientCreate):
-    in_db_ingredient = session.query(IngredientModel).filter(
-        IngredientModel.name == ingredient.name
-    ).one_or_none()
-
-    if in_db_ingredient:
-        return
-
-    db_ingredient = IngredientModel(
-        name=ingredient.name,
-        stock_quantity=ingredient.stock_quantity,
-        unit=ingredient.unit
-    )
-    session.add(db_ingredient)
-    session.commit()
-    session.refresh(db_ingredient)
-    return db_ingredient
-
 def get_item(item_id: int):
     return session.query(ItemModel).filter(ItemModel.item_id == item_id).one()
 
-def get_ingredient(ingredient_id: int):
-    return session.query(IngredientModel).filter(IngredientModel.ingredient_id == ingredient_id).one()
-
-T = TypeVar("T")
-
-CustomPage = CustomizedPage[
-    Page[T],
-    UseIncludeTotal(False),
-]
-
-@app.post('/inventory/items/get', tags=['inventory'])
+@app.get('/inventory/items/get', tags=['inventory'])
 async def inventory_get(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
@@ -215,8 +153,6 @@ async def inventory_get(
 
         return items
 
-
-
 @app.post('/inventory/items/add', tags=['inventory'])
 async def inventory_add_item(
     user: Annotated[
@@ -225,34 +161,41 @@ async def inventory_add_item(
     fields: ItemCreate
 ):
     'Add a new recipe and item, new ingredients should be created ahead using /inventory/ingredients/add'
-    create_item(fields)
-    pass
+    try:
+        new_item = create_item(fields)
+        return {"msg": "Item added successfully", "item": new_item}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to add Item: {str(e)}")
 
 #TODO: @YandreZzz done and tested
-@app.patch('/inventory/items/update', tags=['inventory'])
-async def inventory_update_item(
+@app.patch('/inventory/items/edit', tags=['inventory'])
+async def inventory_edit_item(
     user: Annotated[User, Depends(validate_role(roles=['Manager']))],
     item_id: int,
-    update_fields: InventoryItemUpdate
+    price: Optional[float] = None,
+    name: Optional[str] = None,
+    picture_link: Optional[str] = None,
+    description: Optional[str] = None,
+    category: Optional[str] = None
 ):
     item = get_item(item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
-    if update_fields.name:
-        item.name = update_fields.name
-    if update_fields.price:
-        item.price = update_fields.price
-    if update_fields.description:
-        item.description = update_fields.description
-    if update_fields.category:
-        item.category = update_fields.category
-    if update_fields.picture_link:
-        item.picture_link = update_fields.picture_link
+    if name:
+        item.name = name
+    if price:
+        item.price = price
+    if description:
+        item.description = description
+    if category:
+        item.category = category
+    if picture_link:
+        item.picture_link = picture_link
 
     session.commit()
     session.refresh(item)
-    return {"msg": "Item updated successfully"}
+    return {"msg": "Item edited successfully"}
 
 #TODO: @YandreZzz done and tested
 @app.delete('/inventory/items/delete', tags=['inventory'])
@@ -264,16 +207,33 @@ async def inventory_delete_item(
 ):
     item = get_item(item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     session.delete(item)
     session.commit()
 
     return {"msg": f"Item with ID {item_id} deleted successfully"}
 
-#Helper function for deleting an item
-#async def delete_item(item_id: int):
-    #await database.delete_item(item_id)
+def get_ingredient(ingredient_id: int):
+    return session.query(IngredientModel).filter(IngredientModel.ingredient_id == ingredient_id).one()
+
+def create_ingredient(ingredient: IngredientCreate):
+    in_db_ingredient = session.query(IngredientModel).filter(
+        IngredientModel.name == ingredient.name
+    ).one_or_none()
+
+    if in_db_ingredient:
+        return
+
+    db_ingredient = IngredientModel(
+        name=ingredient.name,
+        stock_quantity=ingredient.stock_quantity,
+        unit=ingredient.unit
+    )
+    session.add(db_ingredient)
+    session.commit()
+    session.refresh(db_ingredient)
+    return db_ingredient
 
 #TODO: @YandreZzz Done and tested
 @app.post('/inventory/ingredients/add', tags=['inventory'])
@@ -287,32 +247,33 @@ async def ingredients_add_item(
         new_ingredient = create_ingredient(fields)
         return {"msg": "Ingredient added successfully", "ingredient": new_ingredient}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to add ingredient: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_status.HTTP_400_BAD_REQUEST_BAD_REQUEST, detail=f"Failed to add ingredient: {str(e)}")
 
 #TODO: @YandreZzz Done and tested
-@app.patch('/inventory/ingredients/update', tags=['inventory'])
-async def ingredients_update_item(
+@app.patch('/inventory/ingredients/edit', tags=['inventory'])
+async def ingredients_edit_item(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
     ingredient_id: int,
-    update_fields: InventoryIngredientUpdate
+    name: Optional[str] = None,
+    stock_quantity: Optional[float] = None,
+    unit: Optional[str] = None
 ):
     ingredient = get_ingredient(ingredient_id)
     if not ingredient:
-        raise HTTPException(status_code=404, detail="Ingredient not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
 
-    if update_fields.name:
-        ingredient.name = update_fields.name
-    if update_fields.stock_quantity:
-        ingredient.stock_quantity = update_fields.stock_quantity
-    if update_fields.unit:
-        ingredient.unit = update_fields.unit
+    if name:
+        ingredient.name = name
+    if stock_quantity:
+        ingredient.stock_quantity = stock_quantity
+    if unit:
+        ingredient.unit = unit
 
     session.commit()
     session.refresh(ingredient)
-    return {"msg": "Ingredient updated successfully"}
-
+    return {"msg": "Ingredient edited successfully"}
 
 #TODO: @YandreZzz Done and tested
 @app.delete('/inventory/ingredients/delete', tags=['inventory'])
@@ -324,9 +285,175 @@ async def ingredients_delete_item(
 ):
     ingredient = get_ingredient(ingredient_id)
     if not ingredient:
-        raise HTTPException(status_code=404, detail="Ingredient not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
 
     session.delete(ingredient)
     session.commit()
 
     return {"msg": f"Item with ID {ingredient_id} deleted successfully"}
+
+def get_stock(stock_id: int):
+    return session.query(InventoryStockModel).filter(InventoryStockModel.stock_id == stock_id).one()
+
+def create_stock(stock: StockCreate):
+    db_stock = InventoryStockModel(
+        stock_batch_id = stock.stock_batch_id,
+        ingredient_id = stock.ingredient_id,
+        expiry_date = stock.expiry_date,
+        status = stock.status
+    )
+    session.add(db_stock)
+    session.commit()
+    session.refresh(db_stock)
+    return db_stock
+
+@app.get('/inventory/stock/get', tags=['inventory'])
+async def stock_get_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    stock_id: int = None
+):
+    if stock_id:
+
+        stock = get_stock(stock_id)
+        if not stock:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
+
+        return stock
+
+    return session.query(InventoryStockModel).all()
+
+@app.post('/inventory/stock/add', tags=['inventory'])
+async def stock_add_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    fields: StockCreate
+):
+    try:
+        new_stock = create_stock(fields)
+        return {"msg": "Ingredient added successfully", "stock": new_stock}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to add stock: {str(e)}")
+
+@app.patch('/inventory/stock/edit', tags=['inventory'])
+async def stock_edit_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    stock_id: int,
+    stock_batch_id: Optional[int] = None,
+    ingredient_id: Optional[int] = None,
+    expiry_date: Optional[date] = None,
+    stock_status: Optional[Literal['Ready to Use', 'Open', "Used"]] = None
+):
+    stock = get_stock(stock_id)
+    if not stock:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
+
+    if stock_batch_id:
+        stock.stock_batch_id = stock_batch_id
+    if ingredient_id:
+        stock.ingredient_id = ingredient_id
+    if expiry_date:
+        stock.expiry_date = expiry_date
+    if stock_status:
+        stock.status = stock_status
+
+    session.commit()
+    session.refresh(stock)
+    return {"msg": "Stock edited successfully"}
+
+@app.delete('/inventory/stock/remove', tags=['inventory'])
+async def stock_remove_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    stock_id: int
+):
+    stock = get_stock(stock_id)
+    if not stock:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
+
+    session.delete(stock)
+    session.commit()
+
+    return {"msg": f"Stock with ID {stock_id} deleted successfully"}
+
+def get_stock_batch(stock_batch_id: int):
+    return session.query(InventoryStockBatchModel).filter(InventoryStockBatchModel.stock_batch_id == stock_batch_id).one()
+
+def create_stock_batch(stock_batch: StockBatchCreate):
+    db_stock_batch = InventoryStockBatchModel(
+        acquisition_date = stock_batch.acquisition_date,
+    )
+    session.add(db_stock_batch)
+    session.commit()
+    session.refresh(db_stock_batch)
+    return db_stock_batch
+
+@app.get('/inventory/stock_batch/get', tags=['inventory'])
+async def stock_batch_get_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    stock_batch_id: int = None
+):
+    if stock_batch_id:
+
+        stock_batch = get_stock_batch(stock_batch_id)
+        if not stock_batch:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock not found")
+
+        return stock_batch
+
+    return session.query(InventoryStockBatchModel).all()
+
+@app.post('/inventory/stock_batch/add', tags=['inventory'])
+async def stock_batch_add_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    fields: StockBatchCreate
+):
+    try:
+        new_stock_batch = create_stock_batch(fields)
+        return {"msg": "Stock batch added successfully", "stock_batch": new_stock_batch}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_status.HTTP_400_BAD_REQUEST_BAD_REQUEST, detail=f"Failed to add stock batch: {str(e)}")
+
+@app.patch('/inventory/stock_batch/edit', tags=['inventory'])
+async def stock_batch_edit_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    stock_batch_id: int,
+    acquisition_date: Optional[date] = None
+):
+    stock_batch = get_stock_batch(stock_batch_id)
+    if not stock_batch:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock batch not found")
+
+    if acquisition_date:
+        stock_batch.acquisition_date = acquisition_date
+
+    session.commit()
+    session.refresh(stock_batch)
+    return {"msg": "Stock batch edited successfully"}
+
+@app.delete('/inventory/stock_batch/remove', tags=['inventory'])
+async def stock_batch_remove_item(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager']))
+    ],
+    stock_batch_id: int
+):
+    stock_batch = get_stock_batch(stock_batch_id)
+    if not stock_batch:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock batch not found")
+
+    session.delete(stock_batch)
+    session.commit()
+
+    return {"msg": f"Stock batch with ID {stock_batch_id} deleted successfully"}
