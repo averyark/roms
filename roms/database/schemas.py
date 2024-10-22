@@ -224,3 +224,20 @@ class EquipmentRemark(EquipmentRemarkBase):
 
     class ConfigDict:
         from_attributes = True
+
+class ReviewBase(BaseModel):
+    user_id: int
+    item_id: int
+    remark: str
+    value: int
+    review_datetime: datetime
+    pass
+
+class ReviewCreate(ReviewBase):
+    pass
+
+class Review(ReviewBase):
+    review_id: int
+
+    class ConfigDict:
+        from_attributes = True

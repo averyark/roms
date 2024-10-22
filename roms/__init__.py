@@ -9,6 +9,7 @@ from .components.order import *
 from .components.analytics import *
 from .components.accounting import *
 from .components.equipment import *
+from .components.feedback import *
 
 if __name__ == '__main__':
     pass

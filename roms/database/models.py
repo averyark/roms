@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float, DATE, Enum, TIME
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float, DATE, Enum, TIME, DATETIME
 from sqlalchemy.orm import relationship
 from .session import Base, session, engine
 
@@ -127,7 +127,7 @@ class UserVoucherModel(Base):
     __tablename__ = 'user_voucher'
 
     user_id = Column(Integer, primary_key=True)
-    voucher_id = Column(Integer, primary_key=True)
+    voucher_id = Column(Integer, ForeignKey("voucher.voucher_id"), primary_key=True)
     use_date = Column(DATE)
 
 class EquipmentRemarkModel(Base):
@@ -138,6 +138,16 @@ class EquipmentRemarkModel(Base):
     remark = Column(String)
     submit_date = Column(DATE)
     status = Column(Enum('Submitted', 'Completed'))
+
+class ReviewModel(Base):
+    __tablename__ = 'review'
+
+    review_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"))
+    item_id = Column(Integer, ForeignKey("item.item_id"))
+    remark = Column(String, nullable=True)
+    value = Column(Integer)
+    review_datetime = Column(DATETIME)
 
 # Create tables
 Base.metadata.create_all(engine)

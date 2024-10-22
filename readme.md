@@ -93,6 +93,7 @@ API|Goal|Tag
 4. Inventory Control: Maintain product inventory by adding, updating, or removing items (product and ingredients) from the system.
    - APIs: `/inventory/ingredients/add`, `/inventory/ingredients/delete`, `/inventory/ingredients/update`, `/items/add`, `/inventory/items/delete` and `/inventory/items/update`
 5. Customer Feedback: Monitor and review customer feedback to improve services.
+   - APIS: `/review/get`, `/review/add`, `/review/edit`, `/review/delete`
 
 #### Customer
 1. Customer Account Management: Create, manage, login and update personal
@@ -106,6 +107,7 @@ cart.
 1. Order Tracking: Monitor the status of placed orders.
    - APIs: `/order/get`
 2. Dishes Review: Customers can share feedback and suggestions about purchased dishes.
+   - APIS:`/review/get`, `/review/add`, `/review/edit`, `/review/delete`
 
 #### Cashier
 1. Product Display: Access a digital menu or product catalogue to view available items.

@@ -3,3 +3,5 @@ venv/
 *.pdf
 .venv
 mock_database.db
+mock_database.db-shm
+mock_database.db-wal
