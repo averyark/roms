@@ -2,9 +2,9 @@
 # @creation_date: 20/09/2024
 # @authors: averyark
 
-from PIL import Image
-import zpl
-from escpos import cli, printer
+#from PIL import Image
+#import zpl
+#from escpos import cli, printer
 from asyncio import run_coroutine_threadsafe
 from sqlalchemy import text
 
