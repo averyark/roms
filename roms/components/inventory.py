@@ -30,8 +30,7 @@ class ItemPage(ItemBase):
 
 class ItemGetIngredient(BaseModel):
     name: str
-    quantity: int
-    unit: str
+    ingredient_id: int
 
 class ItemGet(ItemBase):
     item_id: int
@@ -69,7 +68,6 @@ def create_item(item: ItemCreate):
         db_ingredient_item = ItemIngredientModel(
             ingredient_id=ingredient_item.ingredient_id,
             item_id = in_db_item.item_id,
-            quantity=ingredient_item.quantity
         )
 
         session.add(db_ingredient_item)
@@ -116,7 +114,7 @@ async def inventory_get(
 
             for ingredient in session.execute(
                     select(
-                        ItemIngredientModel.ingredient_id, ItemIngredientModel.quantity
+                        ItemIngredientModel.ingredient_id
                     ).where(
                         row.item_id == ItemIngredientModel.item_id
                     )) .all():
@@ -124,15 +122,13 @@ async def inventory_get(
                 ingredient_row = session.execute(
                     select(
                         IngredientModel.name,
-                        IngredientModel.unit
                     ).where(
                         IngredientModel.ingredient_id == ingredient.ingredient_id
                     )).one()
 
                 row_dict["ingredients"].append({
                     "name": ingredient_row[0],
-                    "unit": ingredient_row[1],
-                    "quantity": ingredient.quantity
+                    "ingredient_id": ingredient.ingredient_id
                 })
 
             items.append(ItemGet(**row_dict))
@@ -156,7 +152,7 @@ async def inventory_get(
 @app.post('/inventory/items/add', tags=['inventory'])
 async def inventory_add_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     fields: ItemCreate
 ):
@@ -170,7 +166,7 @@ async def inventory_add_item(
 #TODO: @YandreZzz done and tested
 @app.patch('/inventory/items/edit', tags=['inventory'])
 async def inventory_edit_item(
-    user: Annotated[User, Depends(validate_role(roles=['Manager']))],
+    user: Annotated[User, Depends(validate_role(roles=['Manager', 'Chef']))],
     item_id: int,
     price: Optional[float] = None,
     name: Optional[str] = None,
@@ -201,7 +197,7 @@ async def inventory_edit_item(
 @app.delete('/inventory/items/delete', tags=['inventory'])
 async def inventory_delete_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     item_id: int
 ):
@@ -227,8 +223,6 @@ def create_ingredient(ingredient: IngredientCreate):
 
     db_ingredient = IngredientModel(
         name=ingredient.name,
-        stock_quantity=ingredient.stock_quantity,
-        unit=ingredient.unit
     )
     session.add(db_ingredient)
     session.commit()
@@ -237,7 +231,7 @@ def create_ingredient(ingredient: IngredientCreate):
 
 #TODO: @YandreZzz Done and tested
 @app.post('/inventory/ingredients/add', tags=['inventory'])
-async def ingredients_add_item(
+async def ingredients_add_ingredient(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -251,14 +245,12 @@ async def ingredients_add_item(
 
 #TODO: @YandreZzz Done and tested
 @app.patch('/inventory/ingredients/edit', tags=['inventory'])
-async def ingredients_edit_item(
+async def ingredients_edit_ingredient(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
     ingredient_id: int,
     name: Optional[str] = None,
-    stock_quantity: Optional[float] = None,
-    unit: Optional[str] = None
 ):
     ingredient = get_ingredient(ingredient_id)
     if not ingredient:
@@ -266,10 +258,6 @@ async def ingredients_edit_item(
 
     if name:
         ingredient.name = name
-    if stock_quantity:
-        ingredient.stock_quantity = stock_quantity
-    if unit:
-        ingredient.unit = unit
 
     session.commit()
     session.refresh(ingredient)
@@ -277,7 +265,7 @@ async def ingredients_edit_item(
 
 #TODO: @YandreZzz Done and tested
 @app.delete('/inventory/ingredients/delete', tags=['inventory'])
-async def ingredients_delete_item(
+async def ingredients_delete_ingredient(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager']))
     ],
@@ -310,7 +298,7 @@ def create_stock(stock: StockCreate):
 @app.get('/inventory/stock/get', tags=['inventory'])
 async def stock_get_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     stock_id: int = None
 ):
@@ -327,20 +315,23 @@ async def stock_get_item(
 @app.post('/inventory/stock/add', tags=['inventory'])
 async def stock_add_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
-    fields: StockCreate
+    stock_batch_id: int,
+    ingredient_id: int,
+    expiry_date: date,
+    stock_status: Literal["Ready to Use", "Open", "Used"]
 ):
     try:
-        new_stock = create_stock(fields)
-        return {"msg": "Ingredient added successfully", "stock": new_stock}
+        new_stock = create_stock(StockCreate(stock_batch_id=stock_batch_id, ingredient_id=ingredient_id, expiry_date=expiry_date, status=stock_status))
+        return {"msg": "Stock added successfully", "stock": new_stock}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to add stock: {str(e)}")
 
 @app.patch('/inventory/stock/edit', tags=['inventory'])
 async def stock_edit_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     stock_id: int,
     stock_batch_id: Optional[int] = None,
@@ -368,7 +359,7 @@ async def stock_edit_item(
 @app.delete('/inventory/stock/remove', tags=['inventory'])
 async def stock_remove_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     stock_id: int
 ):
@@ -396,7 +387,7 @@ def create_stock_batch(stock_batch: StockBatchCreate):
 @app.get('/inventory/stock_batch/get', tags=['inventory'])
 async def stock_batch_get_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     stock_batch_id: int = None
 ):
@@ -413,12 +404,12 @@ async def stock_batch_get_item(
 @app.post('/inventory/stock_batch/add', tags=['inventory'])
 async def stock_batch_add_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
-    fields: StockBatchCreate
+    acquisition_date: date
 ):
     try:
-        new_stock_batch = create_stock_batch(fields)
+        new_stock_batch = create_stock_batch(StockBatchCreate(acquisition_date=acquisition_date))
         return {"msg": "Stock batch added successfully", "stock_batch": new_stock_batch}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_status.HTTP_400_BAD_REQUEST_BAD_REQUEST, detail=f"Failed to add stock batch: {str(e)}")
@@ -426,7 +417,7 @@ async def stock_batch_add_item(
 @app.patch('/inventory/stock_batch/edit', tags=['inventory'])
 async def stock_batch_edit_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     stock_batch_id: int,
     acquisition_date: Optional[date] = None
@@ -445,7 +436,7 @@ async def stock_batch_edit_item(
 @app.delete('/inventory/stock_batch/remove', tags=['inventory'])
 async def stock_batch_remove_item(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager']))
+        User, Depends(validate_role(roles=['Manager', 'Chef']))
     ],
     stock_batch_id: int
 ):
@@ -457,3 +448,51 @@ async def stock_batch_remove_item(
     session.commit()
 
     return {"msg": f"Stock batch with ID {stock_batch_id} deleted successfully"}
+
+@app.get('/inventory/items/available', tags=['inventory'])
+async def is_item_available(
+    user: Annotated[
+        User, Depends(authenticate)
+    ],
+    item_id: int
+):
+    '''
+    Check for stock availability
+    '''
+    item = get_item(item_id=item_id)
+
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    today_date = date.today()
+
+    missing = []
+
+    for ingredient in item.ingredients:
+        # Search for stock
+        ingredient_stock = session.query(InventoryStockModel).filter(InventoryStockModel.ingredient_id == ingredient.ingredient_id).all()
+
+        has_stock = False
+
+        ingredient = get_ingredient(ingredient_id=ingredient.ingredient_id)
+
+        for stock in ingredient_stock:
+            if stock.status in ['Ready to Use', "Open"] and today_date < stock.expiry_date:
+                has_stock = True
+                break
+
+        if not has_stock:
+            missing.append({
+                "id": ingredient.ingredient_id,
+                "name": ingredient.name
+            })
+
+    if len(missing) > 0:
+        return {
+            "available": False,
+            "missing": missing
+        }
+
+    return {
+        "available": True
+    }
