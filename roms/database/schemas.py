@@ -208,3 +208,19 @@ class StockBatch(StockBatchBase):
 
     class ConfigDict:
         from_attributes = True
+
+class EquipmentRemarkBase(BaseModel):
+    equipment_name: str
+    submit_date: date
+    remark: str
+    status: Literal['Submitted', 'Completed']
+    pass
+
+class EquipmentRemarkCreate(EquipmentRemarkBase):
+    pass
+
+class EquipmentRemark(EquipmentRemarkBase):
+    remark_id: int
+
+    class ConfigDict:
+        from_attributes = True

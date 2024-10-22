@@ -130,5 +130,14 @@ class UserVoucherModel(Base):
     voucher_id = Column(Integer, primary_key=True)
     use_date = Column(DATE)
 
+class EquipmentRemarkModel(Base):
+    __tablename__ = 'equipment_remarks'
+
+    remark_id = Column(Integer, primary_key=True)
+    equipment_name = Column(String)
+    remark = Column(String)
+    submit_date = Column(DATE)
+    status = Column(Enum('Submitted', 'Completed'))
+
 # Create tables
 Base.metadata.create_all(engine)
