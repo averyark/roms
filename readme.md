@@ -95,25 +95,32 @@ API|Goal|Tag
 5. Customer Feedback: Monitor and review customer feedback to improve services.
 
 #### Customer
-1. Customer Account Management: Create, manage, login and update personal `/account/expire_token`, `/account/get_token`, `/account/signup`
+1. Customer Account Management: Create, manage, login and update personal
+   - APIs: `/account/expire_token`, `/account/get_token`, `/account/signup`
 information.
-2. Product Browsing: Customers can explore a variety menu items available for
-purchase. `/inventory/items/get`
-3. Cart Management: Customers can add, remove, or modify items in their shopping
-cart. `/order/add`
-4. Order Tracking: Monitor the status of placed orders.
-    - APIs: `/order/get`
-5. Dishes Review: Customers can share feedback and suggestions about purchased
-dishes.
+1. Product Browsing: Customers can explore a variety menu items available for purchase.
+   - APIs: `/inventory/items/get`
+1. Cart Management: Customers can add, remove, or modify items in their shopping
+cart.
+   - APIs: `/order/add`
+1. Order Tracking: Monitor the status of placed orders.
+   - APIs: `/order/get`
+2. Dishes Review: Customers can share feedback and suggestions about purchased dishes.
 
 #### Cashier
-1. Product Display: Access a digital menu or product catalogue to view available items. `/inventory/items/get`
-2. Manage Discount: Add, delete, or modify discounts or promotions for items / menu. `/inventory/items/add`, `/inventory/items/edit`, `/inventory/items/delete`,
+1. Product Display: Access a digital menu or product catalogue to view available items.
+   - APIs: `/inventory/items/get`
+2. Manage Discount: Add, delete, or modify discounts or promotions for items / menu.
+   - APIs: `/inventory/items/add`, `/inventory/items/edit`, `/inventory/items/delete`,
 3. Transaction Completion: Generate receipts for customers.
 4. Reporting: Generate reports on sales performance and product popularity.
 
 #### Chef
-1. Recipe Management: Create, update, and delete digital recipes. `/inventory/items/get`, `/inventory/items/add`, `/inventory/items/edit`, `/inventory/items/delete`
-2. Inventory Check: Verify availability of required ingredients. `/inventory/items/available`
-3. Record-keeping: Record production quantities, batch numbers, and expiration dates. `/inventory/stock_batch/get`, `/inventory/stock_batch/add`, `/inventory/stock_batch/remove`, `/inventory/stock/get`, `/inventory/stock/add`, `/inventory/stock/edit`, `/inventory/stock/remove`
+1. Recipe Management: Create, update, and delete digital recipes.
+   - APIs: `/inventory/items/get`, `/inventory/items/add`, `/inventory/items/edit`, `/inventory/items/delete`
+2. Inventory Check: Verify availability of required ingredients.
+   - APIs: `/inventory/items/available`
+3. Record-keeping: Record production quantities, batch numbers, and expiration dates.
+   - APIs: `/inventory/stock_batch/get`, `/inventory/stock_batch/add`, `/inventory/stock_batch/remove`, `/inventory/stock/get`, `/inventory/stock/add`, `/inventory/stock/edit`, `/inventory/stock/remove`
 4. Equipment Management: Report equipment malfunctions or maintenance need
+   - APIs: `/equipment/remark/get`, `/equipment/remark/add`, `/equipment/remark/add`, `/equipment/remark/delete`
