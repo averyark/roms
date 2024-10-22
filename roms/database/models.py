@@ -32,8 +32,6 @@ class IngredientModel(Base):
 
     ingredient_id = Column(Integer, primary_key=True)
     name = Column(String)
-    stock_quantity = Column(Float)
-    unit = Column(String)
 
 class ItemModel(Base):
     __tablename__ = 'item'
@@ -53,7 +51,6 @@ class ItemIngredientModel(Base):
     item_ingredient_id = Column(Integer, primary_key=True)
     ingredient_id = Column(Integer, ForeignKey('ingredient.ingredient_id'))
     item_id = Column(Integer, ForeignKey('item.item_id'))
-    quantity = Column(Float)
 
     item = relationship('ItemModel', back_populates='ingredients')
 
@@ -74,7 +71,7 @@ class OrderItemModel(Base):
 
     quantity = Column(Integer, default=1)
     remark = Column(String, nullable=True)
-    order_status = Column(Enum('Ordered', 'Preparing', 'Serving', 'Served'))
+    order_status = Column(Enum('Shopping Cart', 'Ordered', 'Preparing', 'Serving', 'Served'))
     price = Column(String)
 
     order = relationship('OrderModel', back_populates='orders')

@@ -2,6 +2,9 @@
 # @creation_date: 20/09/2024
 # @authors: averyark
 
+from PIL import Image
+import zpl
+from escpos import cli, printer
 from asyncio import run_coroutine_threadsafe
 from sqlalchemy import text
 
@@ -53,19 +56,19 @@ def test_login():
 
 def test_create_ingredients():
     ingredients = [
-        inventory.IngredientCreate(name='Tea Powder', stock_quantity=1000, unit='g'),
-        inventory.IngredientCreate(name='Hot Water', stock_quantity=float('inf'), unit='ml'),
-        inventory.IngredientCreate(name='Milk', stock_quantity=500, unit='ml'),
-        inventory.IngredientCreate(name='Milo Powder', stock_quantity=1000, unit='g'),
-        inventory.IngredientCreate(name='Rose Syrup', stock_quantity=1000, unit='ml'),
-        inventory.IngredientCreate(name='Coconut Rice', stock_quantity=1000, unit='g'),
-        inventory.IngredientCreate(name='Sambal', stock_quantity=500, unit='g'),
-        inventory.IngredientCreate(name='Anchovies', stock_quantity=200, unit='g'),
-        inventory.IngredientCreate(name='Flat Rice Noodles', stock_quantity=1000, unit='g'),
-        inventory.IngredientCreate(name='Prawns', stock_quantity=200, unit='g'),
-        inventory.IngredientCreate(name='Egg', stock_quantity=100, unit='pcs'),
-        inventory.IngredientCreate(name='Flour', stock_quantity=1000, unit='g'),
-        inventory.IngredientCreate(name='Dhal Curry', stock_quantity=500, unit='ml')
+        inventory.IngredientCreate(name='Tea Powder'),
+        inventory.IngredientCreate(name='Hot Water'),
+        inventory.IngredientCreate(name='Milk'),
+        inventory.IngredientCreate(name='Milo Powder'),
+        inventory.IngredientCreate(name='Rose Syrup'),
+        inventory.IngredientCreate(name='Coconut Rice'),
+        inventory.IngredientCreate(name='Sambal'),
+        inventory.IngredientCreate(name='Anchovies'),
+        inventory.IngredientCreate(name='Flat Rice Noodles'),
+        inventory.IngredientCreate(name='Prawns'),
+        inventory.IngredientCreate(name='Egg'),
+        inventory.IngredientCreate(name='Flour'),
+        inventory.IngredientCreate(name='Dhal Curry')
     ]
 
     for ingredient in ingredients:
@@ -82,11 +85,9 @@ def test_create_item():
         ingredients=[
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=1,
-                quantity=10
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=2,
-                quantity=200
             )
         ]
     ))
@@ -100,11 +101,9 @@ def test_create_item():
         ingredients=[
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=3,
-                quantity=10
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=2,
-                quantity=150
             )
         ]
     ))
@@ -118,11 +117,9 @@ def test_create_item():
         ingredients=[
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=4,
-                quantity=20
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=2,
-                quantity=200
             )
         ]
     ))
@@ -136,15 +133,12 @@ def test_create_item():
         ingredients=[
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=6,
-                quantity=200
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=7,
-                quantity=50
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=8,
-                quantity=1
             )
         ]
     ))
@@ -158,15 +152,12 @@ def test_create_item():
         ingredients=[
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=9,
-                quantity=200
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=10,
-                quantity=100
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=11,
-                quantity=2
             )
         ]
     ))
@@ -180,16 +171,40 @@ def test_create_item():
         ingredients=[
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=12,
-                quantity=100
             ),
             inventory.IngredientItemCreateNoItemIdKnowledge(
                 ingredient_id=13,
-                quantity=50
             )
         ]
     ))
 
 if __name__ == '__main__':
+    # instance = printer.Dummy()
+    # instance.text(txt="Hello World")
+    # instance.cut()
+    # with open("./test.bin", "wb") as file:
+    #      file.write(instance.output)
+
+    # l = zpl.Label(100,60, dpmm=6)
+    # l.origin(0, 4)
+    # l.write_text('Abu Bhavin Calvin', char_height=6, char_width=4, line_width=60, justification='C')
+    # l.endorigin()
+    # l.origin(0, 12)
+    # l.write_text('(Owned by Abu Bhavin Calvin Sdn Bhd)', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+    # l.endorigin()
+    # l.origin(0, 15)
+    # l.write_text('Co.No: 123456-A', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+    # l.endorigin()
+    # l.origin(0, 18)
+    # l.write_text('SST.No: W-12-3456-78900000', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+    # l.endorigin()
+
+    # l.origin(0, 21)
+    # l.write_text('INVOICE', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+    # l.endorigin()
+
+    # with open("./test.zpl", "w") as file:
+    #     file.write(l.dumpZPL())
 
     #session.query(UserModel).delete()
     #session.commit()
@@ -201,8 +216,6 @@ if __name__ == '__main__':
 
     #test_viewall()
 
-    #test_create_ingredients()
-    #test_create_item()
-
-    #test_create_item()
+    test_create_ingredients()
+    test_create_item()
     pass

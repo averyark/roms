@@ -100,8 +100,6 @@ class UserData(UserBase):
 
 class IngredientBase(BaseModel):
     name: str
-    stock_quantity: float
-    unit: str
 
 class IngredientCreate(IngredientBase):
     pass
@@ -112,11 +110,9 @@ class Ingredient(IngredientBase):
 class IngredientItemBase(BaseModel):
     item_id: int
     ingredient_id: int
-    quantity: float
 
 class IngredientItemCreateNoItemIdKnowledge(BaseModel):
     ingredient_id: int
-    quantity: float
 
 class IngredientItemCreate(IngredientItemBase):
     pass
@@ -188,11 +184,10 @@ class StockBase(BaseModel):
     pass
 
 class StockCreate(StockBase):
-    stock_batch_id: int
+    pass
 
 class Stock(StockBase):
     stock_id: int
-    stock_batch_id: int
 
     stock_batch: Optional['StockBatch']
 

@@ -1,0 +1,35 @@
+@baseUrl = http://127.0.0.1:8000
+
+# @name login
+GET {{baseUrl}}/account/get_token?email=manager@roms.com&password=manager%password122 HTTP/1.1
+
+###
+@authToken = {{login.response.body.access_token}}
+
+GET {{baseUrl}}/inventory/items/get
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+# @name stock_batch
+POST {{baseUrl}}/inventory/stock_batch/add?acquisition_date=2024-10-22
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+@name = {{stock_batch.response.body.stock_batch.stock_batch_id}}
+
+###
+POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{name}}&ingredient_id=1&expiry_date=2024-10-23&stock_status=Ready to Use
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+###
+POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{name}}&ingredient_id=2&expiry_date=2024-10-23&stock_status=Ready to Use
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+###
+GET {{baseUrl}}/inventory/items/available?item_id=1
+Accept: application/json
+Authorization: Bearer {{authToken}}

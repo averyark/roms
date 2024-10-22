@@ -107,13 +107,13 @@ cart. `/order/add`
 dishes.
 
 #### Cashier
-1. Product Display: Access a digital menu or product catalogue to view available items.
-2. Manage Discount: Add, delete, or modify discounts or promotions for items / menu.
+1. Product Display: Access a digital menu or product catalogue to view available items. `/inventory/items/get`
+2. Manage Discount: Add, delete, or modify discounts or promotions for items / menu. `/inventory/items/add`, `/inventory/items/edit`, `/inventory/items/delete`,
 3. Transaction Completion: Generate receipts for customers.
 4. Reporting: Generate reports on sales performance and product popularity.
 
 #### Chef
-1. Recipe Management: Create, update, and delete digital recipes.
-2. Inventory Check: Verify availability of required ingredients.
-3. Record-keeping: Record production quantities, batch numbers, and expiration dates.
+1. Recipe Management: Create, update, and delete digital recipes. `/inventory/items/get`, `/inventory/items/add`, `/inventory/items/edit`, `/inventory/items/delete`
+2. Inventory Check: Verify availability of required ingredients. `/inventory/items/available`
+3. Record-keeping: Record production quantities, batch numbers, and expiration dates. `/inventory/stock_batch/get`, `/inventory/stock_batch/add`, `/inventory/stock_batch/remove`, `/inventory/stock/get`, `/inventory/stock/add`, `/inventory/stock/edit`, `/inventory/stock/remove`
 4. Equipment Management: Report equipment malfunctions or maintenance need
