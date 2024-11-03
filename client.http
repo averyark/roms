@@ -33,3 +33,5 @@ Authorization: Bearer {{authToken}}
 GET {{baseUrl}}/inventory/items/available?item_id=1
 Accept: application/json
 Authorization: Bearer {{authToken}}
+
+POST {{{{baseUrl}}}}/order/add  

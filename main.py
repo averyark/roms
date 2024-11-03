@@ -2,8 +2,9 @@
 # @creation_date: 20/09/2024
 # @authors: averyark
 
-#from PIL import Image
-#import zpl
+from datetime import datetime, date, time
+from PIL import Image
+import zpl
 #from escpos import cli, printer
 from asyncio import run_coroutine_threadsafe
 from sqlalchemy import text
@@ -11,6 +12,7 @@ from sqlalchemy import text
 from roms.account import login, signup, create_account, get_userid_from_email, swagger_login
 from roms.database.models import UserModel, IngredientModel, ItemModel, ItemIngredientModel
 
+from roms.components.inventory import get_item
 import roms.components.order as order
 from roms.database import session
 import roms.account as account
@@ -202,6 +204,69 @@ if __name__ == '__main__':
     # l.origin(0, 21)
     # l.write_text('INVOICE', char_height=3, char_width=2, line_width=60, justification='C', font='A')
     # l.endorigin()
+
+    def generate_receipt(order_id):
+        order_details = order.get_order(order_id)
+        user = get_user(order_details.user_id)
+        items = order_details.orders
+
+        l = zpl.Label(height=100, width=60, dpmm=6)
+        l.origin(0, 4)
+        l.write_text('Restaurant Name', char_height=6, char_width=4, line_width=60, justification='C')
+        l.endorigin()
+        l.origin(0, 12)
+        l.write_text('(Owned by Restaurant Sdn Bhd)', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+        l.endorigin()
+        l.origin(0, 15)
+        l.write_text('Co.No: 123456-A', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+        l.endorigin()
+        l.origin(0, 18)
+        l.write_text('SST.No: W-12-3456-78900000', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+        l.endorigin()
+        l.origin(0, 21)
+        l.write_text('RECEIPT', char_height=3, char_width=2, line_width=60, justification='C', font='A')
+        l.endorigin()
+
+        l.origin(2, 26)
+        l.draw_box(width=338, height=1)
+        l.endorigin()
+
+        l.origin(2, 28)
+        l.write_text(f'Order ID: {order_id}', char_height=3, char_width=2, line_width=60, font='A')
+        l.endorigin()
+        l.origin(2, 32)
+        l.write_text(f'Customer: {user.first_name} {user.last_name}', char_height=3, char_width=2, line_width=60, justification='L', font='A')
+        l.endorigin()
+        l.origin(2, 36)
+        l.write_text(f'Date: {datetime.now().date()}', char_height=3, char_width=2, line_width=120, font='A')
+        l.endorigin()
+
+        l.origin(2, 40)
+        l.draw_box(width=338, height=1)
+        l.endorigin()
+
+        y = 42
+        total_price = 0
+        for order_item in items:
+            l.origin(2, y)
+            item = get_item(order_item.item_id)
+            l.write_text(f'{item.name} x{order_item.quantity} - RM{item.price * order_item.quantity:.2f}', char_height=3, char_width=2, line_width=60, justification='L', font='A')
+            l.endorigin()
+            y += 4
+            total_price += item.price * order_item.quantity
+
+        l.origin(2, y)
+        l.draw_box(width=338, height=1)
+        l.endorigin()
+
+        l.origin(2, y+4)
+        l.write_text(f'Total: RM{total_price:.2f}', char_height=3, char_width=2, line_width=60, justification='L', font='A')
+        l.endorigin()
+
+        l.preview()
+
+    # Example usage
+    generate_receipt(order_id=1)
 
     # with open("./test.zpl", "w") as file:
     #     file.write(l.dumpZPL())

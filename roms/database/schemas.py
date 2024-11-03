@@ -49,6 +49,7 @@ class UserCreate(UserBase):
     password: Annotated[str, AfterValidator(validate_password)]
 
 class UserData(UserBase):
+    is_guest_user: bool = False
     user_id: int
     hashed_password: str
     session_tokens: List[str] = Field(default_factory=list)
@@ -238,6 +239,33 @@ class ReviewCreate(ReviewBase):
 
 class Review(ReviewBase):
     review_id: int
+
+    class ConfigDict:
+        from_attributes = True
+
+# Refer to the TableModel synbol in models.py for comments
+class TableBase(BaseModel):
+    pass
+
+class TableCreate(TableBase):
+    pass
+
+class Table(TableBase):
+    table_id: int
+
+    class ConfigDict:
+        from_attributes = True
+
+class TableSession(BaseModel):
+    session_id: str
+    table_id: int
+
+    occupant_start_datetime: datetime = None
+
+class TableSessionCreate(TableSession):
+    pass
+
+class TableSession(TableSession):
 
     class ConfigDict:
         from_attributes = True

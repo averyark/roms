@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float, DATE, Enum, TIME, DATETIME
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float, DATE, Enum, TIME, DATETIME, Boolean
 from sqlalchemy.orm import relationship
 from .session import Base, session, engine
 
@@ -58,7 +58,9 @@ class OrderModel(Base):
     __tablename__ = 'order'
 
     order_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.user_id'))
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
+    session_id = Column(String, ForeignKey('table_session.session_id'))
+    order_datetime = Column(DATETIME)
 
     orders = relationship('OrderItemModel', back_populates='order')
 
@@ -148,6 +150,32 @@ class ReviewModel(Base):
     remark = Column(String, nullable=True)
     value = Column(Integer)
     review_datetime = Column(DATETIME)
+
+# TableModel is currently abstract and it may seem redundant,
+# but this is to forward compaible new features that will get implemented in the near future
+# TODO: For release, implement dimension, position to identify table location for better representations
+class TableModel(Base):
+    __tablename__ = 'table'
+
+    table_id = Column(Integer, primary_key=True)
+
+# TableSession begins the moment a QR receipt is printed and ends when the occupant checkout the bill, then the cycle repeats.
+# TableSession contributes massively to analytic features
+# TODO: For release, track individual requst/visit to be able to identify the time user will use to complete a order and checkout.
+class TableSessionModel(Base):
+    __tablename__ = 'table_sesion'
+
+    # Session id is uniquely generated using UUID insetad of using incremental integer based Id.
+    session_id = Column(String, primary_key=True)
+
+    table_id = Column(Integer, ForeignKey('table.table_id'))
+
+    # Signifies the true begin of the session
+    # Detected when an occupant request/visits the ordering interface with the specific table_id attached to the session model
+    occupant_start_datetime = Column(DATETIME, nullable=True)
+
+    # Used to identify the number of visits from a specific user. Should be part of release TODO
+    #occupant_user_id = Column(Integer, nullable=True)
 
 # Create tables
 Base.metadata.create_all(engine)

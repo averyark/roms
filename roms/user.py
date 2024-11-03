@@ -11,7 +11,8 @@ userPermissionRanks = {
     'Manager': 255,
     'Chef': 100,
     'Cashier': 50,
-    'Customer': 10
+    'Customer': 10,
+    'Guest': 0
 }
 
 def get_user_class(userPermission: int):

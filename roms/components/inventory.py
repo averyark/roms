@@ -15,10 +15,9 @@ from sqlalchemy.orm import joinedload
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields, UseIncludeTotal
 
 from ..database import session, to_dict
-
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel, InventoryStockModel, InventoryStockBatchModel
 from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase, IngredientItemCreateNoItemIdKnowledge, Stock, StockCreate, StockBatchCreate, StockBatch
-from ..account import authenticate, validate_role
+from ..account import authenticate, authenticate_optional, validate_role
 from ..api import app
 from ..user import User
 from fastapi_pagination.utils import disable_installed_extensions_check
@@ -82,12 +81,19 @@ def get_item(item_id: int):
 @app.get('/inventory/items/get', tags=['inventory'])
 async def inventory_get(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
+        Optional[User], Depends(authenticate_optional)
     ],
+    table_id: int = None,
     search_keyword: str = None
 ) -> List[ItemGet]:
+    '''
+    Authenticating is optional, which means a client that is not login to any account is allowed to use this api (IF) table_id is specified (for security)
+    '''
 
-    if user.get_role() in ['Manager', 'Chef']:
+    if not user and not table_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    if not user is None and user.get_role() in ['Manager', 'Chef']:
         if search_keyword:
             search_keyword = f"%{search_keyword}%"
             query = session.query(ItemModel).where(

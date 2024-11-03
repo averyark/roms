@@ -18,7 +18,7 @@ from sqlalchemy.orm import joinedload
 from ..database import session
 from ..database.models import OrderModel, OrderItemModel
 from ..database.schemas import OrderCreate, OrderItemCreate, Order, OrderItem, OrderCreateNoUserIdKnowledge
-from ..account import authenticate, validate_role
+from ..account import authenticate, authenticate_optional, validate_role
 from ..api import app
 from ..user import User
 
@@ -63,7 +63,7 @@ def delete_all_orders():
 @app.post('/order/get/', tags=['order'])
 async def order_get(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
+        User, Depends(validate_role(roles=['Guest','Manager', 'Chef', 'Cashier', 'Customer']))
     ],
     user_id: int = None
 ) -> List[Order]:
@@ -71,7 +71,7 @@ async def order_get(
     Retrieve all orders belonging to the user that is currently authenticated if user_id is not specified. Otherwise, the orders for the user of {user_id} is returned
     '''
 
-    if user_id and user.get_role() in ["Manager"]:
+    if user_id and user.get_role() in ["Manager", "Chef", "Cashier"]:
         return session.query(OrderModel).filter(
         OrderModel.user_id == user_id)
     else:
@@ -82,13 +82,16 @@ async def order_get(
 @app.post('/order/add/', tags=['order'])
 async def order_add(
     user: Annotated[
-        User, Depends(validate_role(roles=['Manager', 'Chef', 'Cashier', 'Customer']))
+        Optional[User], Depends(authenticate_optional)
     ],
+    table_session_token: str,
     order_create: OrderCreateNoUserIdKnowledge,
     user_id: int = None
 ):
     '''
-    Add order to belonging user that is currently authenticated if user_id is not speicified. Otherwise, the order is added for the user of {user_id}.
+    Add order to belonging u    ser that is currently authenticated if user_id is not speicified. Otherwise, the order is added for the user of {user_id}.
+
+    Authenticating is optional if user_id is not provided.
     '''
 
     if user_id:
