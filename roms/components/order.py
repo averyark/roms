@@ -244,3 +244,38 @@ async def order_item_edit_status(
     session.commit()
 
     return {"message": "Order item status updated successfully"}
+
+def get_session_orders(session_id: str):
+    orders = session.query(OrderModel).filter(
+        OrderModel.session_id == session_id
+    ).all()
+
+    order_items = []
+    orders_dict = []
+
+    for order in orders:
+        for order_item in order.orders:
+            order_items.append(
+                to_dict(order_item)
+            )
+        orders_dict.append(
+            to_dict(order)
+        )
+
+    return orders_dict, order_items
+
+@app.get('/order/session_orders', tags=['order'])
+async def get_session_orders_async(
+    user: Annotated[
+        User, Depends(validate_role(roles=['Manager', "Chef", "Cashier"]))
+    ],
+    table_session_id = str
+):
+
+    orders, order_items = get_session_orders(table_session_id)
+
+    return {
+        'msg': 'Order fetched successfully',
+        'order_items': order_items or [],
+        'orders': orders
+    }

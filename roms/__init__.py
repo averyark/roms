@@ -11,6 +11,7 @@ from .components.accounting import *
 from .components.equipment import *
 from .components.feedback import *
 from .components.table import *
+from .components.voucher import *
 
 if __name__ == '__main__':
     pass

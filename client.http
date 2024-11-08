@@ -269,3 +269,35 @@ Authorization: Bearer {{authToken}}
     "quantity": 1
   }
 ]
+
+###
+
+GET {{baseUrl}}/order/session_orders?table_session_id={{name}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+# Add Voucher
+PATCH {{baseUrl}}/voucher/add?voucher_code=DISCOUNT10&discount_type=Percentage&discount_amount=10&requirement_member=true
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+[
+  "B02"
+]
+
+###
+
+# Delete Voucher
+DELETE {{baseUrl}}/voucher/delete?voucher_code=DISCOUNT10
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+# Apply Voucher
+PATCH {{baseUrl}}/voucher/use?table_session_id={{name}}&voucher_code=DISCOUNT10
+Content-Type: application/json
+Authorization: Bearer {{authToken}}

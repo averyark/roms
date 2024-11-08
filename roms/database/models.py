@@ -77,7 +77,7 @@ class OrderItemModel(Base):
     quantity = Column(Integer, default=1)
     remark = Column(String, nullable=True)
     order_status = Column(Enum('Shopping Cart', 'Ordered', 'Preparing', 'Serving', 'Served'))
-    price = Column(String)
+    price = Column(Float)
 
     order = relationship('OrderModel', back_populates='orders')
 
@@ -104,23 +104,18 @@ class InventoryStockBatchModel(Base):
 class VoucherModel(Base):
     __tablename__ = 'voucher'
 
-    voucher_id = Column(Integer, primary_key=True)
+    voucher_id = Column(String, primary_key=True)
     voucher_code = Column(String, nullable=False)
-    expiry_date = Column(DATE, nullable=True)
-    begin_date = Column(DATE, nullable=True)
+
+    expiry_datetime = Column(DATETIME, nullable=True)
+
+    begin_datetime = Column(DATETIME, nullable=True)
+
+    discount_type = Column(Enum('Percentage', 'Fixed'))
+    discount_amount = Column(Float)
 
     # A voucher can have multiple requirements
     requirements = relationship('VoucherRequirementModel', back_populates='voucher')
-
-class VoucherRequirementModel(Base):
-    __tablename__ = 'voucher_requirement'
-
-    voucher_requirement_id = Column(Integer, primary_key=True)
-    voucher_id = Column(Integer, ForeignKey('voucher.voucher_id'))
-    voucher = relationship('VoucherModel', back_populates='requirements')
-
-    # Require certain item in the receipt
-    requirement_item_id = Column(Integer, nullable=True)
 
     # Voucher can only be used in certain time of the day
     requirement_time = Column(TIME, nullable=True)
@@ -128,12 +123,31 @@ class VoucherRequirementModel(Base):
     # Voucher can only be used with a minimum spend
     requirement_minimum_spend = Column(Float, nullable=True)
 
-class UserVoucherModel(Base):
-    __tablename__ = 'user_voucher'
+    # Require user to login to an account
+    requirement_member = Column(Boolean, nullable=True)
 
-    user_id = Column(Integer, primary_key=True)
-    voucher_id = Column(Integer, ForeignKey("voucher.voucher_id"), primary_key=True)
-    use_date = Column(DATE)
+    #Voucher can only be used a number of times amount by the user (Automatically enables member requirement)
+    max_uses = Column(Integer, nullable=True)
+
+class VoucherRequirementModel(Base):
+    __tablename__ = 'voucher_requirement'
+
+    voucher_requirement_id = Column(String, primary_key=True)
+    voucher_id = Column(Integer, ForeignKey('voucher.voucher_id'))
+    voucher = relationship('VoucherModel', back_populates='requirements')
+
+    # Require certain item in the receipt
+    requirement_item_id = Column(Integer, nullable=True)
+
+class VoucherUsesModel(Base):
+    __tablename__ = 'voucher_uses'
+
+    voucher_use_id = Column(String, primary_key=True)
+    voucher_id = Column(String, ForeignKey("voucher.voucher_id"))
+    user_id = Column(Integer)
+    table_session_id = Column(String, ForeignKey("table_session.session_id"))
+
+    use_datetime = Column(DATETIME)
 
 class EquipmentRemarkModel(Base):
     __tablename__ = 'equipment_remarks'
