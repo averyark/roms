@@ -6,26 +6,182 @@ GET {{baseUrl}}/account/get_token?email=manager@roms.com&password=manager%passwo
 ###
 @authToken = {{login.response.body.access_token}}
 
+###
+
+###
+@baseUrl = http://127.0.0.1:8000
+@authToken = {{login.response.body.access_token}}
+
+### Create Ingredient
+
+@baseUrl = http://127.0.0.1:8000
+@authToken = {{login.response.body.access_token}}
+
+# Bulk Add Ingredients
+POST {{baseUrl}}/inventory/ingredients/bulk_add
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+  {
+    "name": "Tea Powder"
+  },
+  {
+    "name": "Hot Water"
+  },
+  {
+    "name": "Water"
+  },
+  {
+    "name": "Milk"
+  },
+  {
+    "name": "Milo Powder"
+  },
+  {
+    "name": "Rose Syrup"
+  },
+  {
+    "name": "Coconut Rice"
+  },
+  {
+    "name": "Sambal"
+  },
+  {
+    "name": "Anchovies"
+  },
+  {
+    "name": "Flat Rice Noodles"
+  },
+  {
+    "name": "Prawns"
+  },
+  {
+    "name": "Egg"
+  },
+  {
+    "name": "Flour"
+  },
+  {
+    "name": "Dhal Curry"
+  }
+]
+
+###
+
+# Create Item B01
+POST {{baseUrl}}/inventory/items/add?item_id=B01&price=6.3&name=Kopi%20Beng&picture_link=https%3A%2F%2Fencrypted-tbn0.gstatic.com%2Fimages%3Fq%3Dtbn%3AANd9GcRgYbqhuVAja_fGSBITWC7qCKjCsa0jcN5_0w%26s&description=yummy%20kopi%20mmmm&category=Beverage
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+    {"ingredient_name": "Tea Powder"},
+    {"ingredient_name": "Hot Water"}
+]
+
+###
+
+# Create Item B02
+POST {{baseUrl}}/inventory/items/add?item_id=B02&price=5.0&name=Teh%20Tarik&picture_link=https%3A%2F%2Fexample.com%2Fteh_tarik.jpg&description=Traditional%20Malaysian%20pulled%20tea&category=Beverage
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+    {"ingredient_name": "Milk"},
+    {"ingredient_name": "Water"}
+]
+
+###
+
+# Create Item B03
+POST {{baseUrl}}/inventory/items/add?item_id=B03&price=4.5&name=Milo%20Ais&picture_link=https%3A%2F%2Fexample.com%2Fmilo_ais.jpg&description=Iced%20chocolate%20malt%20drink&category=Beverage
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+    {"ingredient_name": "Milo Powder"},
+    {"ingredient_name": "Water"}
+]
+
+###
+
+# Create Item R01
+POST {{baseUrl}}/inventory/items/add?item_id=R01&price=12.0&name=Nasi%20Lemak&picture_link=https%3A%2F%2Fexample.com%2Fnasi_lemak.jpg&description=Coconut%20rice%20with%20sambal%2C%20anchovies%2C%20and%20egg&category=Rice
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+    {"ingredient_name": "Coconut Rice"},
+    {"ingredient_name": "Sambal"},
+    {"ingredient_name": "Anchovies"}
+]
+
+###
+
+# Create Item N01
+POST {{baseUrl}}/inventory/items/add?item_id=N01&price=15.0&name=Char%20Kway%20Teow&picture_link=https%3A%2F%2Fexample.com%2Fchar_kway_teow.jpg&description=Stir-fried%20flat%20rice%20noodles%20with%20prawns%20and%20egg&category=Noodle
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+    {"ingredient_name": "Flat Rice Noodles"},
+    {"ingredient_name": "Prawns"},
+    {"ingredient_name": "Egg"}
+]
+
+###
+
+# Create Item S01
+POST {{baseUrl}}/inventory/items/add?item_id=S01&price=10.0&name=Roti%20Canai&picture_link=https%3A%2F%2Fexample.com%2Froti_canai.jpg&description=Flaky%20flatbread%20served%20with%20dhal%20curry&category=Snacks
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+    {"ingredient_name": "Flour"},
+    {"ingredient_name": "Dhal Curry"}
+]
+
+###
+
 GET {{baseUrl}}/inventory/items/get
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
 ###
 
+POST {{baseUrl}}/inventory/ingredients/get?search_keyword=water
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+POST {{baseUrl}}/inventory/ingredients/get
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
 # @name stock_batch
-POST {{baseUrl}}/inventory/stock_batch/add?acquisition_date=2024-10-22
+POST {{baseUrl}}/inventory/stock_batch/add?acquisition_date=2024-11-07
+Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
-@name = {{stock_batch.response.body.stock_batch.stock_batch_id}}
+@stock_batch_id = {{stock_batch.response.body.stock_batch.stock_batch_id}}
 
 ###
-POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{name}}&ingredient_id=1&expiry_date=2024-10-23&stock_status=Ready to Use
+DELETE {{baseUrl}}/inventory/stock_batch/delete?stock_batch_id=1
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
 ###
-POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{name}}&ingredient_id=2&expiry_date=2024-10-23&stock_status=Ready to Use
+POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{stock_batch_id}}&ingredient_id=db32a9b7-9abb-44a1-bb5a-c3b51811629b&expiry_date=2024-11-23&stock_status=Ready%20to%20Use
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{stock_batch_id}}&ingredient_id=84c73809-1eb3-4db3-add2-4ed6e5c59fe1&expiry_date=2024-11-23&stock_status=Ready to Use
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
@@ -33,3 +189,83 @@ Authorization: Bearer {{authToken}}
 GET {{baseUrl}}/inventory/items/available?item_id=1
 Accept: application/json
 Authorization: Bearer {{authToken}}
+
+###
+
+POST {{baseUrl}}/table/bulk_add
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+  {
+    "table_id": "1",
+    "seats": 4,
+    "status": "Available"
+  },
+  {
+    "table_id": "2",
+    "seats": 4,
+    "status": "Available"
+  },
+  {
+    "table_id": "3",
+    "seats": 4,
+    "status": "Available"
+  },
+  {
+    "table_id": "4",
+    "seats": 4,
+    "status": "Available"
+  },
+  {
+    "table_id": "5",
+    "seats": 2,
+    "status": "Available"
+  },
+  {
+    "table_id": "6",
+    "seats": 2,
+    "status": "Available"
+  }
+]
+
+###
+
+PATCH {{baseUrl}}/table/edit?table_id=3&table_status=Available
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+GET {{baseUrl}}/table/is_available?table_id=2
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+# @name table_session
+POST {{baseUrl}}/table/session/add?table_id=4&head_count=1
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+@name = {{table_session.response.body.table_session.session_id}}
+
+###
+
+PATCH {{baseUrl}}/table/session/edit?table_session_id=36cef236-0e47-449e-b1a9-a4336e981753&session_status=Completed
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+POST {{baseUrl}}/order/add?table_session_id={{name}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+  {
+    "item_id": "B02",
+    "quantity": 1
+  }
+]

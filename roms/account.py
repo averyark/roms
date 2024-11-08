@@ -19,7 +19,7 @@ from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import select
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/account/swagger_login')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/account/swagger_login', auto_error=False)
 
 # NOTE: Annotated[str, Depends(oauth2_scheme)] is for swagger interface
 async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -55,6 +55,11 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
 
     return user
 
+async def authenticate_optional(token: Annotated[str, Depends(oauth2_scheme)]):
+    if token is None:
+        return
+    return await authenticate(token)
+
 class validate_role:
     def __init__(self, roles):
         self.roles = roles
@@ -67,6 +72,8 @@ class validate_role:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Insufficient permissions'
         )
+
+#async def auth_no_login():
 
 class UserInfoUpdate(BaseModel):
     birthday: Optional[str] = None
@@ -107,6 +114,19 @@ def create_user(user: UserCreate):
     session.commit()
     session.refresh(db_user)
     return db_user
+
+def create_guest_user(table_id):
+    user = User(
+        is_guest_user=True,
+        user_id=table_id,
+        email="guestuser@roms.com",
+        first_name="guest",
+        last_name="user",
+        birthday=datetime.now(),
+        hashed_password="%nopass%",
+        permission_level=0,
+        session_tokens=[]
+    )
 
 @app.get(path='/account/get_token', tags=['account'])
 async def login(email: str, password: str) -> Token:
