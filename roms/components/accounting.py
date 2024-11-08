@@ -4,3 +4,10 @@
 
 #from escpos.printer import Usb
 from datetime import date, time
+
+def generate_receipt():
+    pass
+
+def checkout():
+    pass
+
