@@ -97,7 +97,8 @@ async def apply_voucher(
         voucher_use_id=str(uuid4()),
         voucher_id=voucher.voucher_id,
         user_id=user.user_id,
-        table_session_id=table_session_id
+        table_session_id=table_session_id,
+        use_datetime=now_datetime
     )
 
     session.add(db_voucher_uses)
