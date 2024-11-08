@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator, SecretStr
+from pydantic import BaseModel, Field, EmailStr, AfterValidator, StringConstraints, field_validator, SecretStr, conint, UUID4
 from typing import List, Annotated, Literal, Optional
 from .session import session
 from .models import SessionTokenModel, UserModel
@@ -106,14 +106,19 @@ class IngredientCreate(IngredientBase):
     pass
 
 class Ingredient(IngredientBase):
-    pass
+    ingredient_id: UUID4
+    is_deleted: bool = None
+
+    class ConfigDict:
+        from_attributes = True
 
 class IngredientItemBase(BaseModel):
-    item_id: int
+    item_id: str
+    item_ingredient_id: str
     ingredient_id: int
 
 class IngredientItemCreateNoItemIdKnowledge(BaseModel):
-    ingredient_id: int
+    ingredient_id: str
 
 class IngredientItemCreate(IngredientItemBase):
     pass
@@ -122,6 +127,7 @@ class IngredientItem(IngredientItemBase):
     pass
 
 class ItemBase(BaseModel):
+    item_id: str
     price: float
     name: str
     picture_link: str
@@ -133,17 +139,16 @@ class ItemCreate(ItemBase):
     pass
 
 class Item(ItemBase):
-    item_id: int
-
+    is_deleted: bool = None
     ingredients: Optional[List[IngredientItem]] = Field(default_factory=list)
 
     class ConfigDict:
         from_attributes = True
 
 class OrderItemBase(BaseModel):
-    item_id: int
-    quantity: int
-    remark: Optional[str]
+    item_id: str
+    quantity: int = Field(..., ge=1)
+    remark: str = None
     pass
 
 class OrderItemCreate(OrderItemBase):
@@ -151,7 +156,7 @@ class OrderItemCreate(OrderItemBase):
 
 class OrderItem(OrderItemBase):
     order_item_id: int
-    order_id: int
+    order_id: str
     order_status: Literal["Ordered", "Preparing", "Serving", "Served"]
 
     order: Optional['Order'] = None
@@ -160,26 +165,25 @@ class OrderItem(OrderItemBase):
         from_attributes = True
 
 class OrderBase(BaseModel):
-    user_id: int
+    user_id: int = None
+    table_session_id: str
     pass
 
 class OrderCreate(OrderBase):
     orders: List[OrderItemCreate]
 
-class OrderCreateNoUserIdKnowledge(BaseModel):
-    orders: List[OrderItemCreate]
-
 class Order(OrderBase):
-    order_id: int
-    user_id: int
+    order_id: str
+    user_id: int = None
+    table_session_id: str
     orders: Optional[List[OrderItem]] = Field(default_factory=list)
 
     class ConfigDict:
         from_attributes = True
 
 class StockBase(BaseModel):
-    stock_batch_id: int
-    ingredient_id: int
+    stock_batch_id: UUID4
+    ingredient_id: UUID4
     expiry_date: date
     status: Literal['Ready to Use', 'Open', 'Used']
     pass
@@ -188,7 +192,7 @@ class StockCreate(StockBase):
     pass
 
 class Stock(StockBase):
-    stock_id: int
+    stock_id: UUID4
 
     stock_batch: Optional['StockBatch']
 
@@ -203,7 +207,7 @@ class StockBatchCreate(StockBatchBase):
     pass
 
 class StockBatch(StockBatchBase):
-    stock_batch_id: int
+    stock_batch_id: UUID4
 
     stocks: Optional[List[Stock]] = Field(default_factory=list)
 
@@ -228,9 +232,9 @@ class EquipmentRemark(EquipmentRemarkBase):
 
 class ReviewBase(BaseModel):
     user_id: int
-    item_id: int
+    item_id: str
     remark: str
-    value: int
+    value: int = Field(..., ge=1, le=10)
     review_datetime: datetime
     pass
 
@@ -245,27 +249,31 @@ class Review(ReviewBase):
 
 # Refer to the TableModel synbol in models.py for comments
 class TableBase(BaseModel):
+    table_id: str
+    status: Literal['Available', 'Occupied', 'Unavailable']
+    seats: int
     pass
 
 class TableCreate(TableBase):
     pass
 
 class Table(TableBase):
-    table_id: int
 
     class ConfigDict:
         from_attributes = True
 
-class TableSession(BaseModel):
-    session_id: str
-    table_id: int
+class TableSessionBase(BaseModel):
+    session_id: UUID4
+    table_id: str
+    headcount: int = None
+    status: Literal['Active', 'Completed']
 
-    occupant_start_datetime: datetime = None
+    start_datetime: datetime
 
-class TableSessionCreate(TableSession):
+class TableSessionCreate(TableSessionBase):
     pass
 
-class TableSession(TableSession):
+class TableSession(TableSessionBase):
 
     class ConfigDict:
         from_attributes = True

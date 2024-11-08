@@ -30,34 +30,37 @@ class SessionTokenModel(Base):
 class IngredientModel(Base):
     __tablename__ = 'ingredient'
 
-    ingredient_id = Column(Integer, primary_key=True)
+    ingredient_id = Column(String, primary_key=True)
+    is_deleted = Column(Boolean, nullable=True)
     name = Column(String)
 
 class ItemModel(Base):
     __tablename__ = 'item'
 
-    item_id = Column(Integer, primary_key=True)
+    item_id = Column(String, primary_key=True)
     price = Column(Float)
     name = Column(String)
     picture_link = Column(String)
     description = Column(String)
     category = Column(Enum('All', 'Beverage', 'Rice', 'Noodle', 'Snacks'))
 
+    is_deleted = Column(Boolean, nullable=True) # ItemModel is not actually deleted but marked as deleted, otherwise it might break dependencies that rely on the ItemModel
+
     ingredients = relationship('ItemIngredientModel',back_populates="item")
 
 class ItemIngredientModel(Base):
     __tablename__ = 'item_ingredient'
 
-    item_ingredient_id = Column(Integer, primary_key=True)
-    ingredient_id = Column(Integer, ForeignKey('ingredient.ingredient_id'))
-    item_id = Column(Integer, ForeignKey('item.item_id'))
+    item_ingredient_id = Column(String, primary_key=True)
+    ingredient_id = Column(String, ForeignKey('ingredient.ingredient_id'))
+    item_id = Column(String, ForeignKey('item.item_id'))
 
     item = relationship('ItemModel', back_populates='ingredients')
 
 class OrderModel(Base):
     __tablename__ = 'order'
 
-    order_id = Column(Integer, primary_key=True)
+    order_id = Column(String, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=True)
     session_id = Column(String, ForeignKey('table_session.session_id'))
     order_datetime = Column(DATETIME)
@@ -67,8 +70,8 @@ class OrderModel(Base):
 class OrderItemModel(Base):
     __tablename__ = 'order_item'
 
-    order_item_id = Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey('order.order_id'))
+    order_item_id = Column(String, primary_key=True)
+    order_id = Column(String, ForeignKey('order.order_id'))
     item_id = Column(Integer, ForeignKey('item.item_id'))
 
     quantity = Column(Integer, default=1)
@@ -81,10 +84,10 @@ class OrderItemModel(Base):
 class InventoryStockModel(Base):
     __tablename__ = 'inventory_stock'
 
-    stock_id = Column(Integer, primary_key=True)
-    stock_batch_id = Column(Integer, ForeignKey('inventory_stock_batch.stock_batch_id'))
+    stock_id = Column(String, primary_key=True)
+    stock_batch_id = Column(String, ForeignKey('inventory_stock_batch.stock_batch_id'))
     expiry_date = Column(DATE)
-    ingredient_id = Column(Integer, ForeignKey('ingredient.ingredient_id'))
+    ingredient_id = Column(String, ForeignKey('ingredient.ingredient_id'))
 
     status = Column(Enum('Ready to Use', 'Open', 'Used'))
 
@@ -93,7 +96,7 @@ class InventoryStockModel(Base):
 class InventoryStockBatchModel(Base):
     __tablename__ = 'inventory_stock_batch'
 
-    stock_batch_id = Column(Integer, primary_key=True)
+    stock_batch_id = Column(String, primary_key=True)
     acquisition_date = Column(DATE)
 
     stocks = relationship('InventoryStockModel', back_populates='stock_batch')
@@ -157,22 +160,25 @@ class ReviewModel(Base):
 class TableModel(Base):
     __tablename__ = 'table'
 
-    table_id = Column(Integer, primary_key=True)
+    table_id = Column(String, primary_key=True)
+    status = Column(Enum('Available', 'Occupied', "Unavailable"))
+    seats = Column(Integer)
 
 # TableSession begins the moment a QR receipt is printed and ends when the occupant checkout the bill, then the cycle repeats.
 # TableSession contributes massively to analytic features
 # TODO: For release, track individual requst/visit to be able to identify the time user will use to complete a order and checkout.
 class TableSessionModel(Base):
-    __tablename__ = 'table_sesion'
+    __tablename__ = 'table_session'
 
     # Session id is uniquely generated using UUID insetad of using incremental integer based Id.
     session_id = Column(String, primary_key=True)
-
-    table_id = Column(Integer, ForeignKey('table.table_id'))
+    table_id = Column(String, ForeignKey('table.table_id'))
 
     # Signifies the true begin of the session
     # Detected when an occupant request/visits the ordering interface with the specific table_id attached to the session model
-    occupant_start_datetime = Column(DATETIME, nullable=True)
+    start_datetime = Column(DATETIME, nullable=True)
+    status = Column(Enum('Active', 'Completed'))
+    head_count = Column(Integer, nullable=True)
 
     # Used to identify the number of visits from a specific user. Should be part of release TODO
     #occupant_user_id = Column(Integer, nullable=True)

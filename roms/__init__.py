@@ -10,6 +10,7 @@ from .components.analytics import *
 from .components.accounting import *
 from .components.equipment import *
 from .components.feedback import *
+from .components.table import *
 
 if __name__ == '__main__':
     pass

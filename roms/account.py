@@ -22,7 +22,7 @@ from sqlalchemy import select
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/account/swagger_login', auto_error=False)
 
 # NOTE: Annotated[str, Depends(oauth2_scheme)] is for swagger interface
-async def authenticate(token: Annotated[str, Depends(oauth2_scheme)], optional: bool=False ):
+async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
@@ -58,7 +58,7 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)], optional: 
 async def authenticate_optional(token: Annotated[str, Depends(oauth2_scheme)]):
     if token is None:
         return
-    return authenticate(token, optional=True)
+    return await authenticate(token)
 
 class validate_role:
     def __init__(self, roles):
@@ -74,7 +74,6 @@ class validate_role:
         )
 
 #async def auth_no_login():
-
 
 class UserInfoUpdate(BaseModel):
     birthday: Optional[str] = None
