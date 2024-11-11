@@ -279,7 +279,7 @@ Authorization: Bearer {{authToken}}
 ###
 
 # Add Voucher
-PATCH {{baseUrl}}/voucher/add?voucher_code=DISCOUNT10&discount_type=Percentage&discount_amount=10&requirement_member=true&max_uses=1
+PATCH {{baseUrl}}/voucher/add?voucher_code=DISCOUNT10&discount_type=Percentage&discount_amount=10&requirement_member=true
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{authToken}}
