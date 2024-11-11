@@ -16,9 +16,28 @@ from ..user import User
 from ..database import session, to_dict
 from ..database.models import VoucherModel, VoucherRequirementModel, VoucherUsesModel
 
-
 from .order import get_session_orders
 from .table import verify_table_session
+
+def get_total_after_voucher(
+    total: int,
+    vouchers_uses: List[VoucherUsesModel]
+):
+    deduct_percentage = 0
+    deduct_amount = 0
+    for voucher_use in vouchers_uses:
+        voucher = session.query(VoucherModel).filter(
+            VoucherModel.voucher_id == voucher_use.voucher_id
+        ).one()
+
+        if voucher.discount_type == 'Percentage':
+            deduct_percentage += voucher.discount_amount
+        elif voucher.discount_type == 'Fixed':
+            deduct_amount += voucher.discount_amount
+
+    reduction = total * deduct_percentage/100 - deduct_amount
+
+    return total - reduction, reduction
 
 @app.patch('/voucher/use', tags=['voucher'])
 async def apply_voucher(
