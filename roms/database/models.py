@@ -197,5 +197,24 @@ class TableSessionModel(Base):
     # Used to identify the number of visits from a specific user. Should be part of release TODO
     #occupant_user_id = Column(Integer, nullable=True)
 
+class AnalyticsCheckoutModel(Base):
+    __tablename__ = 'analytics_checkout'
+
+    analytics_id = Column(String, primary_key=True)
+    table_session_id = Column(String, ForeignKey('table_session.session_id'))
+
+    subtotal = Column(Integer)
+    gst_total = Column(Integer)
+    sst_total = Column(Integer)
+    discount = Column(Integer)
+    rounding_adj = Column(Integer)
+    net_total = Column(Integer)
+    payment_method = Column(Enum('Touch n Go', 'Credit Card', 'Debit Card', 'Cash'))
+    cashier = Column(Integer, ForeignKey('users.user_id'))
+
+    checkout_time = Column(DATETIME)
+
+    table_session = relationship('TableSessionModel')
+
 # Create tables
 Base.metadata.create_all(engine)

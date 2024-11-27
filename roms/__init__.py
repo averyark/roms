@@ -6,7 +6,6 @@ from .api import *
 from .account import *
 from .components.inventory import *
 from .components.order import *
-from .components.analytics import *
 from .components.cashier import *
 from .components.equipment import *
 from .components.feedback import *

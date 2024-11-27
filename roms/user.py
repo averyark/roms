@@ -38,6 +38,9 @@ class User(UserData):
     def get_birthday_object(self):
        return pendulum.from_format(self.birthday, 'YYYY-MM-DD')
 
+    def get_name(self):
+        return self.last_name + ' ' + self.first_name
+
 def get_user_data_in_dict(user_id: int) -> dict:
     try:
         user = session.query(UserModel).filter(UserModel.user_id == user_id).one()

@@ -247,7 +247,7 @@ async def table_session_edit(
             if in_db_table.status != "Unavailable":
                 in_db_table.status = "Available"
 
-            table_session.status = session_status
+        table_session.status = session_status
 
     if head_count:
         table_session.head_count = head_count

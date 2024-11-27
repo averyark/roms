@@ -170,7 +170,7 @@ Authorization: Bearer {{authToken}}
 @stock_batch_id = {{stock_batch.response.body.stock_batch.stock_batch_id}}
 
 ###
-DELETE {{baseUrl}}/inventory/stock_batch/delete?stock_batch_id=1
+DELETE {{baseUrl}}/inventory/stock_batch/delete?stock_batch_id={{stock_batch_id}}
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
@@ -186,7 +186,7 @@ Accept: application/json
 Authorization: Bearer {{authToken}}
 
 ###
-GET {{baseUrl}}/inventory/items/available?item_id=1
+GET {{baseUrl}}/inventory/items/available?item_id=B01
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
@@ -226,6 +226,11 @@ Authorization: Bearer {{authToken}}
     "table_id": "6",
     "seats": 2,
     "status": "Available"
+  },
+  {
+    "table_id": "6A",
+    "seats": 4,
+    "status": "Available"
   }
 ]
 
@@ -244,18 +249,12 @@ Authorization: Bearer {{authToken}}
 ###
 
 # @name table_session
-POST {{baseUrl}}/table/session/add?table_id=4&head_count=1
+POST {{baseUrl}}/table/session/add?table_id=5&head_count=1
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
-@name = {{table_session.response.body.table_session.session_id}}
-
-###
-
-PATCH {{baseUrl}}/table/session/edit?table_session_id=36cef236-0e47-449e-b1a9-a4336e981753&session_status=Completed
-Content-Type: application/json
-Authorization: Bearer {{authToken}}
+@name = bcd8f4ba-c92f-4f41-ab5c-2008c99ce987
 
 ###
 
@@ -266,6 +265,19 @@ Authorization: Bearer {{authToken}}
 [
   {
     "item_id": "B02",
+    "quantity": 1
+  }
+]
+
+###
+
+POST {{baseUrl}}/order/add?table_session_id={{name}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+  {
+    "item_id": "S01",
     "quantity": 1
   }
 ]
@@ -301,3 +313,18 @@ Authorization: Bearer {{authToken}}
 PATCH {{baseUrl}}/voucher/use?table_session_id={{name}}&voucher_code=DISCOUNT10
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
+
+###
+# Checkout
+PATCH {{baseUrl}}/cashier/checkout?table_session_id={{name}}&payment_method=Credit Card
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+# Test Get Analytics
+GET {{baseUrl}}/cashier/analytics?min_timeframe=2024-01-01T00:00:00&max_timeframe=2024-12-31T23:59:59
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+###

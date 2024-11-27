@@ -619,8 +619,9 @@ async def is_item_available(
         ingredient_stock = session.query(InventoryStockModel).filter(InventoryStockModel.ingredient_id == ingredient.ingredient_id).all()
 
         has_stock = False
+        print(to_dict(ingredient))
 
-        ingredient = get_ingredient(ingredient_id=ingredient.ingredient_id)
+        in_db_ingredient = session.query(IngredientModel).filter(IngredientModel.ingredient_id == ingredient.ingredient_id).one_or_none()
 
         for stock in ingredient_stock:
             if stock.status in ['Ready to Use', "Open"] and today_date < stock.expiry_date:
@@ -629,8 +630,8 @@ async def is_item_available(
 
         if not has_stock:
             missing.append({
-                "id": ingredient.ingredient_id,
-                "name": ingredient.name
+                "id": in_db_ingredient.ingredient_id,
+                "name": in_db_ingredient.name
             })
 
     if len(missing) > 0:
