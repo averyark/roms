@@ -272,7 +272,7 @@ def generate_receipt(receipt_info: dict):
     l.preview()
     return l.dumpZPL()
 
-@app.post('/cashier/receipt', tags=['cashier'])
+@app.post('/cashier/print/receipt', tags=['cashier'])
 def print_receipt(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', "Chef", "Cashier"]))
@@ -362,7 +362,7 @@ def print_receipt(
 
     generate_receipt(receipt_info)
 
-@app.patch('/cashier/checkout', tags=['cashier'])
+@app.post('/cashier/checkout', tags=['cashier'])
 def checkout(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', "Chef", "Cashier"]))
@@ -376,6 +376,9 @@ def checkout(
 
     if table_session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='This table session does not exist')
+
+    if table_session.status != "Active":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Cannot checkout a completed session')
 
     table = session.query(TableModel).filter(
         TableModel.table_id == table_session.table_id
@@ -617,7 +620,7 @@ def generate_analytics_receipt(receipt_info: dict):
     l.preview()
     return l.dumpZPL()
 
-@app.get('/cashier/receipt', tags=['Cashier', 'Manager'])
+@app.post('/cashier/print/stats', tags=['Cashier', 'Manager'])
 def print_receipt(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', "Chef", "Cashier"]))
@@ -642,10 +645,10 @@ def print_receipt(
             f"Number of Sales this week: {stats_week[0]}",
             f"Number of Sales this month: {stats_month[0]}",
             f"Number of Sales this year: {stats_year[0]}",
-            f"Revenue today: {stats_today[1]}",
-            f"Revenue this week: {stats_week[1]}",
-            f"Revenue this month: {stats_month[1]}",
-            f"Revenue this year: {stats_year[1]}",
+            f"Revenue today: {round(stats_today[1], 2)}",
+            f"Revenue this week: {round(stats_week[1], 2)}",
+            f"Revenue this month: {round(stats_month[1], 2)}",
+            f"Revenue this year: {round(stats_year[1], 2)}",
             f"Government Tax collected today: {round(stats_today[2], 2)}",
             f"Government Tax collected this week: {round(stats_week[2], 2)}",
             f"Government Tax collected this month: {round(stats_month[2], 2)}",

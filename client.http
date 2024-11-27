@@ -316,7 +316,7 @@ Authorization: Bearer {{authToken}}
 
 ###
 # Checkout
-PATCH {{baseUrl}}/cashier/checkout?table_session_id={{name}}&payment_method=Credit Card
+POST {{baseUrl}}/cashier/checkout?table_session_id={{name}}&payment_method=Credit Card
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
@@ -326,5 +326,12 @@ Authorization: Bearer {{authToken}}
 GET {{baseUrl}}/cashier/analytics?min_timeframe=2024-01-01T00:00:00&max_timeframe=2024-12-31T23:59:59
 Authorization: Bearer {{authToken}}
 Accept: application/json
+
+###
+
+# Print
+POST {{baseUrl}}/cashier/print/stats
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
 
 ###
