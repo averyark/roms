@@ -29,9 +29,13 @@ from typing import Annotated
 
 from icecream import ic
 
-def test_signup():
+def signup_customer():
+    user = session.query(UserModel).filter(UserModel.email == "customer@gmail.com").one_or_none()
+    if not user is None:
+        return
+
     create_account(data=account.UserCreate(
-        email='customer1@gmail.com',
+        email='customer@gmail.com',
         birthday='20050921',
         password='somepass12',
         first_name='alan',
@@ -39,13 +43,17 @@ def test_signup():
         permission_level=10
     ))
 
-def test_signup_manager():
+def signup_manager():
+    user = session.query(UserModel).filter(UserModel.email == "manager@roms.com").one_or_none()
+    if not user is None:
+        return
+
     create_account(data=account.UserCreate(
         email='manager@roms.com',
         birthday='20050921',
         password='manager%password122',
-        first_name='ger',
-        last_name='mana',
+        first_name='sam',
+        last_name='cheng',
         permission_level=255
     ))
 
@@ -187,110 +195,8 @@ def test_create_item():
         ]
     ))
 
-def generate_receipt(order_id):
-    order_details = order.get_order(order_id)
-    user = get_user(order_details.user_id)
-    items = order_details.orders
-
-    l = zpl.Label(height=100, width=60, dpmm=6)
-    l.origin(0, 4)
-    l.write_text('Restaurant Name', char_height=6, char_width=4, line_width=60, justification='C')
-    l.endorigin()
-    l.origin(0, 12)
-    l.write_text('(Owned by Restaurant Sdn Bhd)', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    l.endorigin()
-    l.origin(0, 15)
-    l.write_text('Co.No: 123456-A', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    l.endorigin()
-    l.origin(0, 18)
-    l.write_text('SST.No: W-12-3456-78900000', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    l.endorigin()
-    l.origin(0, 21)
-    l.write_text('RECEIPT', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    l.endorigin()
-
-    l.origin(2, 26)
-    l.draw_box(width=338, height=1)
-    l.endorigin()
-
-    l.origin(2, 28)
-    l.write_text(f'Order ID: {order_id}', char_height=3, char_width=2, line_width=60, font='A')
-    l.endorigin()
-    l.origin(2, 32)
-    l.write_text(f'Customer: {user.first_name} {user.last_name}', char_height=3, char_width=2, line_width=60, justification='L', font='A')
-    l.endorigin()
-    l.origin(2, 36)
-    l.write_text(f'Date: {datetime.now().date()}', char_height=3, char_width=2, line_width=120, font='A')
-    l.endorigin()
-
-    l.origin(2, 40)
-    l.draw_box(width=338, height=1)
-    l.endorigin()
-
-    y = 42
-    total_price = 0
-    for order_item in items:
-        l.origin(2, y)
-        item = get_item(order_item.item_id)
-        l.write_text(f'{item.name} x{order_item.quantity} - RM{item.price * order_item.quantity:.2f}', char_height=3, char_width=2, line_width=60, justification='L', font='A')
-        l.endorigin()
-        y += 4
-        total_price += item.price * order_item.quantity
-
-    l.origin(2, y)
-    l.draw_box(width=338, height=1)
-    l.endorigin()
-
-    l.origin(2, y+4)
-    l.write_text(f'Total: RM{total_price:.2f}', char_height=3, char_width=2, line_width=60, justification='L', font='A')
-    l.endorigin()
-
-    l.preview()
-
+signup_customer()
+signup_manager()
 
 if __name__ == '__main__':
-    # instance = printer.Dummy()
-    # instance.text(txt="Hello World")
-    # instance.cut()
-    # with open("./test.bin", "wb") as file:
-    #      file.write(instance.output)
-
-    # l = zpl.Label(100,60, dpmm=6)
-    # l.origin(0, 4)
-    # l.write_text('Abu Bhavin Calvin', char_height=6, char_width=4, line_width=60, justification='C')
-    # l.endorigin()
-    # l.origin(0, 12)
-    # l.write_text('(Owned by Abu Bhavin Calvin Sdn Bhd)', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    # l.endorigin()
-    # l.origin(0, 15)
-    # l.write_text('Co.No: 123456-A', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    # l.endorigin()
-    # l.origin(0, 18)
-    # l.write_text('SST.No: W-12-3456-78900000', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    # l.endorigin()
-
-    # l.origin(0, 21)
-    # l.write_text('INVOICE', char_height=3, char_width=2, line_width=60, justification='C', font='A')
-    # l.endorigin()
-
-    # Example usage
-    #generate_receipt(order_id=1)
-
-    # with open("./test.zpl", "w") as file:
-    #     file.write(l.dumpZPL())
-
-    #session.query(UserModel).delete()
-    #session.commit()
-
-    #order.delete_all_orders()
-
-    #test_signup_manager()
-    #test_signup()
-
-    #order.delete_all_orders()
-
-    #test_viewall()
-
-    #test_create_ingredients()
-    #test_create_item()
     pass

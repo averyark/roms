@@ -2,6 +2,8 @@
 # @creation_date: 18/09/2024
 # @authors: averyark
 
+# !OBSELETE
+
 from pydantic import BaseModel
 #from roms.validate import validate_user_data
 import unittest
