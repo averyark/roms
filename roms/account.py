@@ -270,9 +270,14 @@ async def delete_account(
     user_id: int,
 ):
     try:
-
-        pass
-    except: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        db_user = session.query(UserModel).filter(UserModel.user_id == user_id).one_or_none()
+        if not db_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        session.delete(db_user)
+        session.commit()
+        return {"detail": "User deleted successfully"}
+    except: 
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str())
 
 @app.patch('/account/edit/user_info', tags=['account'])
 async def update_user_info(
