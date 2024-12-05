@@ -8,20 +8,14 @@
 from typing import Annotated, Literal, Optional, List
 
 from fastapi import Depends, HTTPException, status
-from pydantic import BaseModel
-from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import paginate as api_pagiante
-from fastapi_pagination import Page, set_page
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
 from uuid import uuid4
 from datetime import datetime
 
 from .table import verify_table_session
 from ..database import session, to_dict
 from ..database.models import OrderModel, OrderItemModel, ItemModel
-from ..database.schemas import OrderCreate, OrderItemCreate, Order, OrderItem
-from ..account import authenticate, authenticate_optional, validate_role
+from ..database.schemas import OrderCreate, OrderItemCreate
+from ..account import authenticate_optional, validate_role
 from ..api import app
 from ..user import User
 

@@ -3,7 +3,6 @@
 # @authors: averyark
 
 from typing import Annotated, Optional
-from asyncio import run_coroutine_threadsafe
 
 from .credentials import SECRET_KEY, USE_ALGORITHM, pwd_context, JWT_EXPIRATION_MINUTES
 from .api import app
@@ -29,8 +28,12 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
         headers={'WWW-Authenticate': 'Bearer'},
     )
 
+    if token is None:
+        raise credentials_exception
+
     try:
         # NOTE: Ignore _bcrypt.__about_ Error
+        print("IGNORE _bcrypt.__about_ Error")
         payload = jwt_decode(token, SECRET_KEY, algorithms=[USE_ALGORITHM])
         user_id = payload.get('sub')
         if user_id is None:
@@ -52,6 +55,8 @@ async def authenticate(token: Annotated[str, Depends(oauth2_scheme)]):
             user.session_tokens.remove(token)
 
         raise credentials_exception
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=err)
 
     return user
 
@@ -210,9 +215,6 @@ async def swagger_login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -
 # NOTE: You cannot input permissionLevel from this api
 @app.post(path='/account/signup', tags=['account'])
 async def signup(data: UserCreate):
-    # redundant, already checked by pydantic but just putting it here for now
-    #validate_user_data(data)
-
     user = session.query(UserModel).filter(UserModel.email == data.email).one_or_none()
 
     if user:
@@ -276,7 +278,7 @@ async def delete_account(
         session.delete(db_user)
         session.commit()
         return {"detail": "User deleted successfully"}
-    except: 
+    except:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str())
 
 @app.patch('/account/edit/user_info', tags=['account'])

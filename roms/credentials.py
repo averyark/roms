@@ -2,10 +2,6 @@
 # @creation_date: 18/09/2024
 # @authors: averyark
 
-import sqlite3
-from icecream import ic
-
-from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 
 # run 'openssl rand -hex 32' in terminal to generate a new secret!
