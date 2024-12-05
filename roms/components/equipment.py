@@ -1,10 +1,9 @@
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 from datetime import date
 
 from fastapi import HTTPException, status, Depends
 
 from ..database import session
-from ..database.schemas import EquipmentRemark, EquipmentRemarkCreate
 from ..database.models import EquipmentRemarkModel
 from ..api import app
 from ..account import validate_role

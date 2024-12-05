@@ -1,10 +1,9 @@
-from typing import Annotated, Literal, Optional
-from datetime import date, datetime
+from typing import Annotated
+from datetime import datetime
 
 from fastapi import HTTPException, status, Depends
 
 from ..database import session
-from ..database.schemas import Review, ReviewCreate
 from ..database.models import ReviewModel
 from ..api import app
 from ..account import validate_role

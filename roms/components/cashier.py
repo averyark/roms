@@ -2,24 +2,21 @@
 # @creation_date: 18/10/2024
 # @authors: averyark
 
-from typing import Annotated, Literal, Optional, List
-from datetime import date, time, datetime, timedelta
+from typing import Annotated, Literal
+from datetime import datetime, timedelta
 from uuid import uuid4
 from sqlalchemy import func
 
 from fastapi import Depends, HTTPException, status
 from zpl import Label
-from PIL import Image
 
-from ..account import authenticate, authenticate_optional, validate_role
+from ..account import validate_role
 from ..api import app
 from ..user import User
-from ..database import session, to_dict
+from ..database import session
 from ..database.models import VoucherUsesModel, OrderModel, OrderItemModel, TableSessionModel, TableModel, ItemModel, AnalyticsCheckoutModel
 
 from .voucher import get_total_after_voucher
-from .order import get_session_orders
-from .table import verify_table_session, table_session_edit
 
 DUMMY_SST_ID = 'W10-2210-32100024'
 DUMMY_INVOICE_NO = 'INV00001'

@@ -2,7 +2,6 @@
 # @creation_date: 14/09/2024
 # @authors: averyark
 
-from icecream import ic
 import pendulum
 from sqlalchemy.exc import NoResultFound
 from .database import session, UserModel, UserData

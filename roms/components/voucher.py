@@ -6,11 +6,9 @@ from typing import Annotated, Literal, Optional, List
 
 from datetime import datetime, time
 from fastapi import Depends, HTTPException, status
-from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import paginate as api_pagiante
 from uuid import uuid4
 
-from ..account import authenticate, authenticate_optional, validate_role
+from ..account import authenticate_optional, validate_role
 from ..api import app
 from ..user import User
 from ..database import session, to_dict
