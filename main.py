@@ -27,8 +27,6 @@ from roms.credentials import pwd_context
 from fastapi import Depends, FastAPI, HTTPException, status
 from typing import Annotated
 
-from icecream import ic
-
 def signup_customer():
     user = session.query(UserModel).filter(UserModel.email == "customer@gmail.com").one_or_none()
     if not user is None:

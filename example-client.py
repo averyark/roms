@@ -3,7 +3,6 @@
 # @authors: averyark
 
 from requests import api
-from icecream import ic
 from pydantic import BaseModel
 import requests.auth
 
