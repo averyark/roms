@@ -55,11 +55,6 @@ def signup_manager():
         permission_level=255
     ))
 
-def test_viewall():
-
-    for dat in session.query(UserModel).all():
-        ic(dat.user_id, dat.email, dat.first_name, dat.last_name, dat.birthday, dat.permission_level)
-
 def test_login():
     login(get_userid_from_email('manager@roms.com'), 'manager%password122')
 
