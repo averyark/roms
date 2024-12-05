@@ -10,7 +10,6 @@
 ### How to use
 > [!IMPORTANT]
 > If you're downloading the source directly, you cannot run the program directly. Ensure you install the environment
-> Make sure to install the python environment.
 
 Run the following in terminal if the environment is not installed in your directory:
 
