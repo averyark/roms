@@ -8,10 +8,30 @@
 
 
 ### How to use
-> [!WARNING]
-ROMS is only compatible with Python 3.10 and 3.11
+> [!IMPORTANT]
+> If you're downloading the source directly, you cannot run the program directly. Ensure you install the environment
+> Make sure to install the python environment.
 
-Make sure you have python environment installed. Run the following if it is not installed in your directory.
+Run the following in terminal if the environment is not installed in your directory:
+
+Windows
+```
+pip install virtualenv
+virtualenv -p python3.11 venv
+venv\scripts\activate.bat
+pip install -r requirements.txt
+pip install "fastapi[standard]"
+```
+
+Macos
+```
+pip install virtualenv
+virtualenv -p python3.11 venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install "fastapi[standard]"
+```
+
 
 Run FastAPI to use apis locally:
 ```
@@ -19,7 +39,7 @@ FastAPI dev main.py
 ```
 
 > [!NOTE]
-If you're downloading the source directly, you might be starting with a fresh Database
+If you're downloading the source directly, you might be starting with a fresh Database, use client.http to populate database
 
 APIs are accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
 
