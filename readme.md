@@ -18,6 +18,9 @@ Run FastAPI to use apis locally:
 FastAPI dev main.py
 ```
 
+> [!NOTE]
+If you're downloading the source directly, you might be starting with a fresh Database
+
 APIs are accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
 
 > [!IMPORTANT]
