@@ -8,18 +8,14 @@
 
 
 ### How to use
+> [!NOTE]
+> ROMS is tested and fine tuned extensively specifically only for Python 3.11 due to limited time, so it's recommended that Python 3.11 is used in your test/usage.
+> 
 > [!IMPORTANT]
-> If you're downloading the source directly, you cannot run the program directly. Ensure you install and activate the environment.
+> You cannot run the program directly. Ensure you install and activate the environment.
+
 
 Run the following in terminal after you install your environment:
-
-Windows
-```
-pip install -r requirements.txt
-pip install "fastapi[standard]"
-```
-
-Macos
 ```
 pip install -r requirements.txt
 pip install "fastapi[standard]"
@@ -31,14 +27,14 @@ fastapi dev main.py
 ```
 
 > [!NOTE]
-If you're downloading the source directly, you might be starting with a fresh Database, use client.http to populate database
+If you're downloading the source directly, you might be starting with a fresh Database, use the  run the presets client.http to populate database
 
 APIs are accessible locally at http://127.0.0.1:8000/, documentation at http://127.0.0.1:8000/docs#/
 
 > [!IMPORTANT]
 Some apis require authentication, so you have to login to use them. Below are some sample account you can use.
 
-Alternatively, you can create your own account
+Alternatively, you can create your own account using the `/account/signup` or `/account/add` api
 
 Role|Email|Password
 -|-|-
