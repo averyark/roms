@@ -27,8 +27,6 @@ from roms.credentials import pwd_context
 from fastapi import Depends, FastAPI, HTTPException, status
 from typing import Annotated
 
-from icecream import ic
-
 def signup_customer():
     user = session.query(UserModel).filter(UserModel.email == "customer@gmail.com").one_or_none()
     if not user is None:
@@ -56,11 +54,6 @@ def signup_manager():
         last_name='cheng',
         permission_level=255
     ))
-
-def test_viewall():
-
-    for dat in session.query(UserModel).all():
-        ic(dat.user_id, dat.email, dat.first_name, dat.last_name, dat.birthday, dat.permission_level)
 
 def test_login():
     login(get_userid_from_email('manager@roms.com'), 'manager%password122')

@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, literal, Float, DATE, Enum, TIME, DATETIME, Boolean
 from sqlalchemy.orm import relationship
-from .session import Base, session, engine
+from .session import Base, engine
 
 engine = create_engine('sqlite:///mock_database.db', isolation_level="READ UNCOMMITTED")
 

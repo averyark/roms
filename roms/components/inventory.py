@@ -2,23 +2,18 @@
 # @creation_date: 01/10/2024
 # @authors: averyark
 
-from datetime import date, time
-from typing import Annotated, Literal, Optional, List, TypeVar
-from fastapi import Depends, Query
+from datetime import date
+from typing import Annotated, Literal, Optional, List
+from fastapi import Depends
 from pydantic import BaseModel
 from fastapi import HTTPException, status
-from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import paginate as api_pagiante
-from fastapi_pagination import Page, set_page
 from sqlalchemy import select, and_
-from sqlalchemy.orm import joinedload
-from fastapi_pagination.customization import CustomizedPage, UseParamsFields, UseIncludeTotal
 from uuid import uuid4
 
 from .table import verify_table_session
 from ..database import session, to_dict
 from ..database.models import ItemModel, IngredientModel, ItemIngredientModel, InventoryStockModel, InventoryStockBatchModel
-from ..database.schemas import IngredientItem, IngredientItemCreate, Ingredient, IngredientCreate, Item, ItemCreate, ItemBase, IngredientItemCreateNoItemIdKnowledge, Stock, StockCreate, StockBatchCreate, StockBatch
+from ..database.schemas import IngredientCreate, ItemCreate, ItemBase, IngredientItemCreateNoItemIdKnowledge, StockCreate, StockBatchCreate
 from ..account import authenticate, authenticate_optional, validate_role
 from ..api import app
 from ..user import User

@@ -2,16 +2,16 @@
 # @creation_date: 04/11/2024
 # @authors: averyark
 
-from datetime import date, time, datetime
-from typing import Annotated, Literal, List, TypeVar
-from fastapi import Depends, Query
+from datetime import datetime
+from typing import Annotated, Literal, List
+from fastapi import Depends
 from fastapi import HTTPException, status
 from uuid import UUID, uuid4
 
 from ..database import session, to_dict
-from ..database.models import TableModel, TableSessionModel, OrderModel
-from ..database.schemas import TableSession, TableSessionCreate, TableSession, TableCreate
-from ..account import authenticate, authenticate_optional, validate_role
+from ..database.models import TableModel, TableSessionModel
+from ..database.schemas import TableCreate
+from ..account import validate_role
 from ..api import app
 from ..user import User
 

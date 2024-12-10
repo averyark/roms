@@ -1,5 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException, status
-from typing import Annotated
+from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 
 app = FastAPI()

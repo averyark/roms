@@ -4,10 +4,6 @@ from sqlalchemy.exc import NoResultFound
 from .models import *
 from .schemas import *
 from .session import session
-from ..credentials import pwd_context, SECRET_KEY, USE_ALGORITHM, JWT_EXPIRATION_MINUTES
-
-from datetime import datetime, timezone, timedelta
-from jwt import encode as jwt_encode, decode as jwt_decode, ExpiredSignatureError
 
 def get_user_data_in_dict(user_id: int) -> dict:
     try:
