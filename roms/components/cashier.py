@@ -495,7 +495,7 @@ def checkout(
 def to_dict_v2(models):
     return [model.__dict__ for model in models]
 
-@app.get('/cashier/analytics', tags=['Cashier', 'Manager'])
+@app.get('/cashier/analytics', tags=['cashier'])
 def get_analytics(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', "Chef", "Cashier"]))
@@ -617,7 +617,7 @@ def generate_analytics_receipt(receipt_info: dict):
     l.preview()
     return l.dumpZPL()
 
-@app.post('/cashier/print/stats', tags=['Cashier', 'Manager'])
+@app.post('/cashier/print/stats', tags=['cashier'])
 def print_receipt(
     user: Annotated[
         User, Depends(validate_role(roles=['Manager', "Chef", "Cashier"]))
