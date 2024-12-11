@@ -225,7 +225,12 @@ async def signup(data: UserCreate):
 
     # Overwrite permission_level
     data.permission_level = 10
-    create_user(data)
+    in_db_user = create_user(data)
+
+    return {
+        'msg': 'Successfully created account',
+        'account': in_db_user 
+    }
 
 def get_userid_from_email(email: str) -> int:
     user_id = None
