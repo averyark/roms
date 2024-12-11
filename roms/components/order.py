@@ -90,11 +90,15 @@ async def order_get(
     '''
 
     if user_id and user.get_role() in ["Manager", "Chef", "Cashier"]:
-        return to_dict(session.query(OrderModel).filter(
-        OrderModel.user_id == user_id))
+        orders = session.query(OrderModel).filter(
+            OrderModel.user_id == user_id
+        ).all()
+        return orders
     else:
-        return to_dict(session.query(OrderModel).filter(
-        OrderModel.user_id == user.user_id))
+        orders = session.query(OrderModel).filter(
+            OrderModel.user_id == user.user_id
+        ).all()
+        return orders
 
 @app.post('/order/add/', tags=['order'])
 async def order_add(
