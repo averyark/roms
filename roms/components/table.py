@@ -52,6 +52,7 @@ async def table_add(
         seats=seats
     )
 
+    session.add(table)
     session.commit()
     session.refresh(table)
 
