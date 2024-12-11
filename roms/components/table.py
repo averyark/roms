@@ -40,7 +40,7 @@ async def table_add(
 ):
 
     in_db_table = session.query(TableModel).filter(
-        TableModel.table_id == id
+        TableModel.table_id == table_id
     ).one_or_none()
 
     if in_db_table:
