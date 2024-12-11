@@ -177,7 +177,7 @@ async def order_item_delete(
     if in_db_order_item is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Order item not found')
 
-    in_db_order_item.delete()
+    session.delete(in_db_order_item)
     session.commit()
 
     return {"message": "Order deleted successfully"}

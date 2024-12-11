@@ -104,8 +104,13 @@ async def apply_voucher(
         VoucherModel.voucher_id == voucher.voucher_id
     ).all()
 
-    for requirement in voucher_requirements:
-        if requirement.requirement_item_id not in [item['item_id'] for item in order_items]:
+    required = []
+
+    for req in voucher_requirements:
+        required.append(req.requirement_item_id)
+
+    for requirement in required:
+        if not requirement.requirement_item_id in order_items:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Required item not in order')
 
     # Passed all requirement checks
