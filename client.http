@@ -162,7 +162,7 @@ Authorization: Bearer {{authToken}}
 ###
 
 # @name stock_batch
-POST {{baseUrl}}/inventory/stock_batch/add?acquisition_date=2024-11-07
+POST {{baseUrl}}/inventory/stock_batch/add?acquisition_date=2024-12-11
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{authToken}}
@@ -175,13 +175,13 @@ Accept: application/json
 Authorization: Bearer {{authToken}}
 
 ###
-POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{stock_batch_id}}&ingredient_id=db32a9b7-9abb-44a1-bb5a-c3b51811629b&expiry_date=2024-11-23&stock_status=Ready%20to%20Use
+POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{stock_batch_id}}&ingredient_id=26a489de-1d13-4e98-86d7-69b74c24a188&expiry_date=2024-12-12&stock_status=Ready%20to%20Use
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
 ###
 
-POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{stock_batch_id}}&ingredient_id=84c73809-1eb3-4db3-add2-4ed6e5c59fe1&expiry_date=2024-11-23&stock_status=Ready to Use
+POST {{baseUrl}}/inventory/stock/add?stock_batch_id={{stock_batch_id}}&ingredient_id=a782ad37-deb2-4d1b-94d3-927985813411&expiry_date=2024-12-12&stock_status=Ready to Use
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
@@ -249,12 +249,12 @@ Authorization: Bearer {{authToken}}
 ###
 
 # @name table_session
-POST {{baseUrl}}/table/session/add?table_id=5&head_count=1
+POST {{baseUrl}}/table/session/add?table_id=3&head_count=2
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{authToken}}
 
-@name = bcd8f4ba-c92f-4f41-ab5c-2008c99ce987
+@name = {{table_session.response.body.table_session.session_id}}
 
 ###
 
@@ -295,10 +295,6 @@ PATCH {{baseUrl}}/voucher/add?voucher_code=DISCOUNT10&discount_type=Percentage&d
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{authToken}}
-
-[
-  "B02"
-]
 
 ###
 
