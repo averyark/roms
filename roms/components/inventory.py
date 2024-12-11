@@ -391,12 +391,13 @@ async def delete_ingredient(
     ],
     ingredient_id: str
 ):
-    ingredient = get_ingredient(ingredient_id)
+    ingredient = session.query(IngredientModel).one_or_none()
+
     if not ingredient:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
 
     #session.delete(ingredient)
-    ingredient.is_deleted = False
+    ingredient.is_deleted = True
     session.commit()
     session.refresh(ingredient)
 
